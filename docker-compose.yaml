@@ -1,0 +1,83 @@
+services:
+
+  rabbitmq:
+    image: 'rabbitmq:latest'
+    environment:
+      - 'RABBITMQ_DEFAULT_PASS=boilerplate'
+      - 'RABBITMQ_DEFAULT_USER=boilerplate'
+    ports:
+      - '5672:5672'
+    networks:
+      - nt-general-come-come
+
+  postgres-off:
+    image: 'postgres:latest'
+    platform: linux/amd64
+    environment:
+      - 'POSTGRES_DB=ms-off'
+      - 'POSTGRES_PASSWORD=boilerplate'
+      - 'POSTGRES_USER=postgres'
+    ports:
+      - '5433:5432'
+    networks:
+      - nt-general-come-come
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ms-off:
+    build: /OFF-Come-come/.
+    ports:
+      - '8082:8082'
+    environment:
+      - 'spring.datasource.url=jdbc:postgresql://postgres-off:5432/ms-off'
+      - 'spring.datasource.username=postgres'
+      - 'spring.datasource.password=boilerplate'
+    depends_on:
+      postgres-off:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
+    networks:
+      - nt-general-come-come
+
+  postgres-cadastro:
+    image: 'postgres:latest'
+    platform: linux/amd64
+    environment:
+      - 'POSTGRES_DB=ms-cadastro'
+      - 'POSTGRES_PASSWORD=boilerplate'
+      - 'POSTGRES_USER=postgres'
+    ports:
+      - '5432:5432'
+    networks:
+      - nt-general-come-come
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ms-cadastro:
+    build: /Cadastro-Come-come/.
+    ports:
+      - '8081:8081'
+    environment:
+      - 'spring.datasource.url=jdbc:postgresql://postgres-cadastro:5432/ms-cadastro'
+      - 'spring.datasource.username=postgres'
+      - 'spring.datasource.password=boilerplate'
+    depends_on:
+      postgres-cadastro:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
+    networks:
+      - nt-general-come-come
+
+networks:
+  nt-general-come-come:
+    driver: bridge
