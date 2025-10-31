@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    platform: linux/amd64
+    environment:
+      - 'POSTGRES_DB=ms-off'
+      - 'POSTGRES_PASSWORD=dev-password'
+      - 'POSTGRES_USER=postgres'
+    ports:
+      - '5435:5432'
+    networks:
+      - nt-ms-off
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: 'rabbitmq:latest'
+    environment:
+      - 'RABBITMQ_DEFAULT_PASS=secret'
+      - 'RABBITMQ_DEFAULT_USER=myuser'
+    ports:
+      - '5674:5672'
+    networks:
+      - nt-ms-off
+
+  ms-off:
+    build: .
+    ports:
+      - '8082:8082'
+    environment:
+      - 'spring.datasource.url=jdbc:postgresql://postgres:5432/ms-off'
+      - 'spring.datasource.username=postgres'
+      - 'spring.datasource.password=dev-password'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
+    networks:
+      - nt-ms-off
+
+networks:
+  nt-ms-off:
+    driver: bridge
