@@ -81,6 +81,41 @@ services:
     networks:
       - nt-general-come-come
 
+  postgres-anamnese:
+    image: 'postgres:latest'
+    platform: linux/amd64
+    environment:
+      - 'POSTGRES_DB=ms-anamnese'
+      - 'POSTGRES_PASSWORD=boilerplate'
+      - 'POSTGRES_USER=postgres'
+    ports:
+      - '5434:5432'
+    networks:
+      - nt-general-come-come
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ms-anamnese:
+    build: /Anamnese-Come-come/.
+    platform: linux/amd64
+    ports:
+      - '8084:8084'
+    environment:
+      - 'spring.datasource.url=jdbc:postgresql://postgres-anamnese:5432/ms-anamnese'
+      - 'spring.datasource.username=postgres'
+      - 'spring.datasource.password=boilerplate'
+    depends_on:
+      postgres-cadastro:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
+    networks:
+      - nt-general-come-come
+
 networks:
   nt-general-come-come:
     driver: bridge
