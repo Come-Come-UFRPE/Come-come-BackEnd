@@ -30,6 +30,10 @@ public class OpenFoodFactsService {
     @Autowired
     private AllergenTranslationService allergenTranslationService;
 
+    @Autowired
+    private IngredientTranslationService ingredientTranslationService;
+
+
     public OpenFoodFactsService(WebClient.Builder webClientBuilder) {
 
         ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
@@ -126,15 +130,19 @@ public class OpenFoodFactsService {
                     .toList();
         }
 
+        String text = (String) map.get("text");
+        String translatedText = ingredientTranslationService.translate(text);
+
         return new IngredientDto(
                 (String) map.get("id"),
                 map.get("percent_estimate") != null ? map.get("percent_estimate").toString() : null,
-                (String) map.get("text"),
+                translatedText,
                 (String) map.get("vegan"),
                 (String) map.get("vegetarian"),
                 subIngredients
         );
     }
+
 
 
     private ProductResponseDto toProductResponseDto(Map<String, Object> produto) {
