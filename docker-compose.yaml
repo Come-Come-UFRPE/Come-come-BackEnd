@@ -29,7 +29,7 @@ services:
       retries: 5
 
   ms-off:
-    build: /OFF-Come-come/.
+    build: ./OFF-Come-come/.
     platform: linux/amd64
     ports:
       - '8082:8082'
@@ -54,7 +54,7 @@ services:
       - 'POSTGRES_PASSWORD=boilerplate'
       - 'POSTGRES_USER=postgres'
     ports:
-      - '5432:5432'
+      - '5431:5432'
     networks:
       - nt-general-come-come
     healthcheck:
@@ -64,7 +64,7 @@ services:
       retries: 5
 
   ms-cadastro:
-    build: /Cadastro-Come-come/.
+    build: ./Cadastro-Come-come/.
     platform: linux/amd64
     ports:
       - '8081:8081'
@@ -99,7 +99,7 @@ services:
       retries: 5
 
   ms-anamnese:
-    build: /Anamnese-Come-come/.
+    build: ./Anamnese-Come-come/.
     platform: linux/amd64
     ports:
       - '8084:8084'
