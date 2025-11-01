@@ -2,6 +2,7 @@ services:
 
   rabbitmq:
     image: 'rabbitmq:latest'
+    platform: linux/amd64
     environment:
       - 'RABBITMQ_DEFAULT_PASS=boilerplate'
       - 'RABBITMQ_DEFAULT_USER=boilerplate'
@@ -29,6 +30,7 @@ services:
 
   ms-off:
     build: /OFF-Come-come/.
+    platform: linux/amd64
     ports:
       - '8082:8082'
     environment:
@@ -63,6 +65,7 @@ services:
 
   ms-cadastro:
     build: /Cadastro-Come-come/.
+    platform: linux/amd64
     ports:
       - '8081:8081'
     environment:
