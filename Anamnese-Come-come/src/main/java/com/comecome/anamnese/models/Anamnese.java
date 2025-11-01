@@ -1,5 +1,6 @@
 package com.comecome.anamnese.models;
 
+import com.comecome.anamnese.models.enums.*;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
