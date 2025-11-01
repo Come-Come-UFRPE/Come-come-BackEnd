@@ -54,7 +54,7 @@ services:
       - 'POSTGRES_PASSWORD=boilerplate'
       - 'POSTGRES_USER=postgres'
     ports:
-      - '5432:5432'
+      - '5431:5432'
     networks:
       - nt-general-come-come
     healthcheck:
