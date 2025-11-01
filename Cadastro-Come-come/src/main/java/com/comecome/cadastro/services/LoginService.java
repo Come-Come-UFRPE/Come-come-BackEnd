@@ -27,7 +27,7 @@ public class LoginService {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, senha));
 
         if(authentication.isAuthenticated()){
-            return new LoginResponseDTO(jwtService.generateToken(email), findByEmail(email).getUserId().toString());
+            return new LoginResponseDTO(jwtService.generateToken(email), findByEmail(email).getUserId().toString(), findByEmail(email).isFezAnamnese());
         }
         throw new RuntimeException("Usuário não autenticado");
     }

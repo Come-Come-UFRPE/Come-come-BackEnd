@@ -9,7 +9,8 @@ public record UserResponseDTO(UUID id,
                               String email,
                               String cidade,
                               String estado,
-                              int idade) {
+                              int idade,
+                              boolean fezAnamnese) {
 
     public UserResponseDTO(User user) {
         this(
@@ -18,7 +19,8 @@ public record UserResponseDTO(UUID id,
                 user.getEmail(),
                 user.getCidade(),
                 user.getEstado(),
-                user.getIdade()
+                user.getIdade(),
+                user.isFezAnamnese()
         );
     }
 }
