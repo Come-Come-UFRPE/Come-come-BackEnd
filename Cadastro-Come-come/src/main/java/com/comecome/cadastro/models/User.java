@@ -22,6 +22,16 @@ public class User implements Serializable {
     private String estado;
     private int idade;
 
+    private boolean fezAnamnese;
+
+    public boolean isFezAnamnese() {
+        return fezAnamnese;
+    }
+
+    public void setFezAnamnese(boolean fezAnamnese) {
+        this.fezAnamnese = fezAnamnese;
+    }
+
     public int getIdade() {
         return idade;
     }
