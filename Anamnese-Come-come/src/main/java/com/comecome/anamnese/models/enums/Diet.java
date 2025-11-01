@@ -1,4 +1,4 @@
-package com.comecome.anamnese.models;
+package com.comecome.anamnese.models.enums;
 
 public enum Diet {
     BAIXO_CARBOIDRATO,
