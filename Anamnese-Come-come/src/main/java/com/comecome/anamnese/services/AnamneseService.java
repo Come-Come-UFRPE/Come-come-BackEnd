@@ -20,9 +20,9 @@ public class AnamneseService {
     }
 
     @Transactional
-    public Anamnese save(Anamnese anamnese){
-        System.out.println(anamnese.getAnamneseID());
-        return repository.save(anamnese);
+    public AnamneseResponseDTO save(Anamnese anamnese){
+        Anamnese savedEntity = repository.save(anamnese);
+        return AnamneseResponseDTO.fromEntity(savedEntity);
     }
 
     public AnamneseResponseDTO getAnamneseById(UUID id){

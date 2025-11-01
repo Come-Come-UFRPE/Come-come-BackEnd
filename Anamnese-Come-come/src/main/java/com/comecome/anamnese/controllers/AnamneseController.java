@@ -25,7 +25,7 @@ public class AnamneseController {
     }
 
     @PostMapping
-    public ResponseEntity<Anamnese> createAnamnese(@RequestBody @Valid AnamneseRecordDTO anamneseRecordDTO){
+    public ResponseEntity<AnamneseResponseDTO> createAnamnese(@RequestBody @Valid AnamneseRecordDTO anamneseRecordDTO){
         var anamnese = anamneseRecordDTO.toEntity();
         System.out.println(anamnese);
         return ResponseEntity.status(HttpStatus.CREATED).body(anamneseService.save(anamnese));
