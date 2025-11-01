@@ -1,11 +1,13 @@
 package com.comecome.anamnese.services;
 
+import com.comecome.anamnese.dtos.AnamnesePatchRecordDTO;
 import com.comecome.anamnese.dtos.AnamneseResponseDTO;
 import com.comecome.anamnese.models.Anamnese;
 import com.comecome.anamnese.repositories.AnamneseRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.UUID;
 
 @Service
@@ -19,23 +21,53 @@ public class AnamneseService {
 
     @Transactional
     public Anamnese save(Anamnese anamnese){
-        System.out.println("=== SERVICE: Salvando anamnese ===");
-        System.out.println("Peso: " + anamnese.getPeso());
-        System.out.println("Altura: " + anamnese.getAltura());
-        System.out.println("Idade: " + anamnese.getIdade());
-        System.out.println("Sexo: " + anamnese.getSexo());
-        System.out.println("Objective: " + anamnese.getObjective());
-        System.out.println("Alergias: " + anamnese.getFoodAllergy());
-        System.out.println("Condições: " + anamnese.getHealthCondition());
-        System.out.println("Dietas: " + anamnese.getDiet());
-        Anamnese saved = repository.save(anamnese);
-        System.out.println("=== SERVICE: Salvo com sucesso! ID: " + saved.getAnamneseID() + " ===");
-        return saved;
-
+        System.out.println(anamnese.getAnamneseID());
+        return repository.save(anamnese);
     }
 
     public AnamneseResponseDTO getAnamneseById(UUID id){
-        Anamnese anamnese = repository.findByAnamneseID(id).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        Anamnese anamnese = repository.findByAnamneseID(id).orElseThrow(() -> new RuntimeException("Anamnese não encontrada"));
         return new AnamneseResponseDTO(anamnese);
+    }
+
+    @Transactional
+    public Anamnese partialUpdate(UUID id, AnamnesePatchRecordDTO dto){
+        Anamnese updateAnamnese = repository.findByAnamneseID(id)
+                .orElseThrow(() -> new RuntimeException("Anamnese não encontrada"));
+
+        if (dto.peso() != null){
+            updateAnamnese.setPeso(dto.peso());
+        }
+
+        if (dto.altura() != null){
+            updateAnamnese.setAltura(dto.altura());
+        }
+
+        if (dto.idade() != null){
+            updateAnamnese.setIdade(dto.idade());
+        }
+
+        if (dto.objective() != null){
+            updateAnamnese.setObjective(dto.objective());
+        }
+
+        // Remove e atualiza novamente (melhor?)
+        if (dto.foodAllergy() != null) {
+            updateAnamnese.getFoodAllergy().clear();
+            updateAnamnese.getFoodAllergy().addAll(dto.foodAllergy());
+        }
+
+        if (dto.healthCondition() != null) {
+            updateAnamnese.getHealthCondition().clear();
+            updateAnamnese.getHealthCondition().addAll(dto.healthCondition());
+        }
+
+        if (dto.diet() != null) {
+            updateAnamnese.getDiet().clear();
+            updateAnamnese.getDiet().addAll(dto.diet());
+        }
+
+
+        return repository.save(updateAnamnese);
     }
 }
