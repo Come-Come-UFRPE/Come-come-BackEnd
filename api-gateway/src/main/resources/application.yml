@@ -1,0 +1,47 @@
+server:
+  port: 8083
+
+spring:
+  main:
+    web-application-type: reactive
+
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: cadastro #exemplo, devemos colocar aqui os paths dos microsservicos
+          uri: lb://CADASTRO
+          predicates:
+            - Path=/cadastro/**
+          filters:
+            - StripPrefix=1
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5 #limites de requests
+                redis-rate-limiter.burstCapacity: 10
+
+        - id: anamnese
+          uri: lb://ANAMNESE
+          predicates:
+            - Path=/anamnese/**
+        - id: openfoodfacts
+          uri: lb://OPENFOODFACTS
+          predicates:
+            - Path=/openfoodfacts/**
+  data:
+    redis:
+      host: localhost #server do redis, o redis cuida da limitacao de requisicoes
+      port: 6379
+
+eureka: #nessa parte, mostramos como o servico se registra no eureka, se nao for feito, nao sera possivel encontrar
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/  #link do server eureka
