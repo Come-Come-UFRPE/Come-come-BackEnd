@@ -34,12 +34,13 @@ services:
       - nt-general-come-come
 
   rabbitmq:
-    image: 'rabbitmq:latest'
+    image: 'rabbitmq:management'
     environment:
       - 'RABBITMQ_DEFAULT_PASS=boilerplate'
       - 'RABBITMQ_DEFAULT_USER=boilerplate'
     ports:
       - '5672:5672'
+      - '15672:15672'
     networks:
       - nt-general-come-come
 
