@@ -8,11 +8,6 @@ services:
       - '8761:8761'
     networks:
       - nt-general-come-come
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # API Gateway
   api-gateway:
@@ -32,7 +27,7 @@ services:
       - 'SPRING_APPLICATION_NAME=api-gateway'
     depends_on:
       eureka-server:
-        condition: service_healthy
+        condition: service_started
       redis:
         condition: service_healthy
     networks:
@@ -95,7 +90,7 @@ services:
       - 'SPRING_APPLICATION_NAME=OPENFOODFACTS'
     depends_on:
       eureka-server:
-        condition: service_healthy
+        condition: service_started
       postgres-off:
         condition: service_healthy
       rabbitmq:
@@ -135,7 +130,7 @@ services:
       - 'SPRING_APPLICATION_NAME=CADASTRO'
     depends_on:
       eureka-server:
-        condition: service_healthy
+        condition: service_started
       postgres-cadastro:
         condition: service_healthy
       rabbitmq:
@@ -175,7 +170,7 @@ services:
       - 'SPRING_APPLICATION_NAME=ANAMNESE'
     depends_on:
       eureka-server:
-        condition: service_healthy
+        condition: service_started
       postgres-anamnese:
         condition: service_healthy
       rabbitmq:
