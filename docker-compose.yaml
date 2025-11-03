@@ -1,4 +1,43 @@
 services:
+
+  # Eureka Server para service discovery
+  eureka-server:
+    build: ./eureka-server/.
+    container_name: eureka-server
+    ports:
+      - '8761:8761'
+    networks:
+      - nt-general-come-come
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway/.
+    ports:
+      - '8083:8083'
+    environment:
+      - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
+      - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
+      - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
+      - 'SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true'
+      - 'SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWERCASE-SERVICE-ID=true'
+      - 'SPRING_DATA_REDIS_HOST=redis'
+      - 'SPRING_DATA_REDIS_PORT=6379'
+      - 'SPRING_DATA_REDIS_PASSWORD=boilerplate'
+      - 'SERVER_PORT=8083'
+      - 'SPRING_APPLICATION_NAME=api-gateway'
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - nt-general-come-come
+
   rabbitmq:
     image: 'rabbitmq:latest'
     environment:
@@ -9,6 +48,21 @@ services:
     networks:
       - nt-general-come-come
 
+  redis:
+    image: 'redis:latest'
+    ports:
+      - '6379:6379'
+    environment:
+      - 'REDIS_PASSWORD=boilerplate'
+    command: redis-server --requirepass boilerplate
+    networks:
+      - nt-general-come-come
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "boilerplate", "--raw", "incr", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   postgres-off:
     image: 'postgres:latest'
     environment:
@@ -17,7 +71,7 @@ services:
       - 'POSTGRES_USER=postgres'
       - 'POSTGRES_HOST_AUTH_METHOD=md5'
     ports:
-      - '5433:5432' # Porta do host 5433
+      - '5433:5432'
     networks:
       - nt-general-come-come
     healthcheck:
@@ -34,7 +88,14 @@ services:
       - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-off:5432/ms-off'
       - 'SPRING_DATASOURCE_USERNAME=postgres'
       - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
+      - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
+      - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
+      - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
+      - 'SERVER_PORT=8082'
+      - 'SPRING_APPLICATION_NAME=OPENFOODFACTS'
     depends_on:
+      eureka-server:
+        condition: service_healthy
       postgres-off:
         condition: service_healthy
       rabbitmq:
@@ -50,7 +111,7 @@ services:
       - 'POSTGRES_USER=postgres'
       - 'POSTGRES_HOST_AUTH_METHOD=md5'
     ports:
-      - '5431:5432' # Porta do host 5431
+      - '5431:5432'
     networks:
       - nt-general-come-come
     healthcheck:
@@ -67,7 +128,14 @@ services:
       - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-cadastro:5432/ms-cadastro'
       - 'SPRING_DATASOURCE_USERNAME=postgres'
       - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
+      - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
+      - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
+      - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
+      - 'SERVER_PORT=8081'
+      - 'SPRING_APPLICATION_NAME=CADASTRO'
     depends_on:
+      eureka-server:
+        condition: service_healthy
       postgres-cadastro:
         condition: service_healthy
       rabbitmq:
@@ -83,7 +151,7 @@ services:
       - 'POSTGRES_USER=postgres'
       - 'POSTGRES_HOST_AUTH_METHOD=md5'
     ports:
-      - '5434:5432' # Porta do host 5434
+      - '5434:5432'
     networks:
       - nt-general-come-come
     healthcheck:
@@ -100,7 +168,14 @@ services:
       - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-anamnese:5432/ms-anamnese'
       - 'SPRING_DATASOURCE_USERNAME=postgres'
       - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
+      - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
+      - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
+      - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
+      - 'SERVER_PORT=8084'
+      - 'SPRING_APPLICATION_NAME=ANAMNESE'
     depends_on:
+      eureka-server:
+        condition: service_healthy
       postgres-anamnese:
         condition: service_healthy
       rabbitmq:
