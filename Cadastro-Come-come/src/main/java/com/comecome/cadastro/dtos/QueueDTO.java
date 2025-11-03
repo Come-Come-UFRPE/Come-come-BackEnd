@@ -1,5 +1,7 @@
 package com.comecome.cadastro.dtos;
 
+
+
 import java.util.UUID;
 
 public class QueueDTO {
@@ -11,4 +13,5 @@ public class QueueDTO {
         this.id = id;
         this.evento = "Usuário criado";
     }
+
 }
