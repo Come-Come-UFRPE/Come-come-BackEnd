@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public record AnamneseResponseDTO(UUID anamneseID,
+                                  UUID userID,
                                   Double peso,
                                   Double altura,
                                   Integer idade,
@@ -20,6 +21,7 @@ public record AnamneseResponseDTO(UUID anamneseID,
     public AnamneseResponseDTO(Anamnese anamnese) {
         this(
                 anamnese.getAnamneseID(),
+                anamnese.getUserID(),
                 anamnese.getPeso(),
                 anamnese.getAltura(),
                 anamnese.getIdade(),
@@ -35,6 +37,7 @@ public record AnamneseResponseDTO(UUID anamneseID,
     public static AnamneseResponseDTO fromEntity(Anamnese anamnese) {
         return new AnamneseResponseDTO(
                 anamnese.getAnamneseID(),
+                anamnese.getUserID(),
                 anamnese.getPeso(),
                 anamnese.getAltura(),
                 anamnese.getIdade(),
