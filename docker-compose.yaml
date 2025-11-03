@@ -1,8 +1,6 @@
 services:
-
   rabbitmq:
     image: 'rabbitmq:latest'
-    platform: linux/amd64
     environment:
       - 'RABBITMQ_DEFAULT_PASS=boilerplate'
       - 'RABBITMQ_DEFAULT_USER=boilerplate'
@@ -13,13 +11,12 @@ services:
 
   postgres-off:
     image: 'postgres:latest'
-    platform: linux/amd64
     environment:
       - 'POSTGRES_DB=ms-off'
       - 'POSTGRES_PASSWORD=boilerplate'
       - 'POSTGRES_USER=postgres'
     ports:
-      - '5433:5432'
+      - '5433:5432' # Porta do host 5433
     networks:
       - nt-general-come-come
     healthcheck:
@@ -30,31 +27,29 @@ services:
 
   ms-off:
     build: ./OFF-Come-come/.
-    platform: linux/amd64
     ports:
       - '8082:8082'
     environment:
-      - 'spring.datasource.url=jdbc:postgresql://postgres-off:5432/ms-off'
-      - 'spring.datasource.username=postgres'
-      - 'spring.datasource.password=boilerplate'
+      # Renomeado para o formato padrão do Spring Boot
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-off:5432/ms-off'
+      - 'SPRING_DATASOURCE_USERNAME=postgres'
+      - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
     depends_on:
       postgres-off:
         condition: service_healthy
       rabbitmq:
         condition: service_started
-
     networks:
       - nt-general-come-come
 
   postgres-cadastro:
     image: 'postgres:latest'
-    platform: linux/amd64
     environment:
       - 'POSTGRES_DB=ms-cadastro'
       - 'POSTGRES_PASSWORD=boilerplate'
       - 'POSTGRES_USER=postgres'
     ports:
-      - '5431:5432'
+      - '5431:5432' # Porta do host 5431
     networks:
       - nt-general-come-come
     healthcheck:
@@ -65,31 +60,29 @@ services:
 
   ms-cadastro:
     build: ./Cadastro-Come-come/.
-    platform: linux/amd64
     ports:
       - '8081:8081'
     environment:
-      - 'spring.datasource.url=jdbc:postgresql://postgres-cadastro:5432/ms-cadastro'
-      - 'spring.datasource.username=postgres'
-      - 'spring.datasource.password=boilerplate'
+      # Renomeado para o formato padrão do Spring Boot
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-cadastro:5432/ms-cadastro'
+      - 'SPRING_DATASOURCE_USERNAME=postgres'
+      - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
     depends_on:
       postgres-cadastro:
         condition: service_healthy
       rabbitmq:
         condition: service_started
-
     networks:
       - nt-general-come-come
 
   postgres-anamnese:
     image: 'postgres:latest'
-    platform: linux/amd64
     environment:
       - 'POSTGRES_DB=ms-anamnese'
       - 'POSTGRES_PASSWORD=boilerplate'
       - 'POSTGRES_USER=postgres'
     ports:
-      - '5434:5432'
+      - '5434:5432' # Porta do host 5434
     networks:
       - nt-general-come-come
     healthcheck:
@@ -100,19 +93,18 @@ services:
 
   ms-anamnese:
     build: ./Anamnese-Come-come/.
-    platform: linux/amd64
     ports:
       - '8084:8084'
     environment:
-      - 'spring.datasource.url=jdbc:postgresql://postgres-anamnese:5432/ms-anamnese'
-      - 'spring.datasource.username=postgres'
-      - 'spring.datasource.password=boilerplate'
+      # Renomeado para o formato padrão do Spring Boot
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-anamnese:5432/ms-anamnese'
+      - 'SPRING_DATASOURCE_USERNAME=postgres'
+      - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
     depends_on:
       postgres-anamnese:
         condition: service_healthy
       rabbitmq:
         condition: service_started
-
     networks:
       - nt-general-come-come
 
