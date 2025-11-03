@@ -1,9 +1,11 @@
 package com.comecome.anamnese.models.enums;
 
+import java.util.Arrays;
+
 public enum Objective {
     PERDA_CONTROLE_PESO,
     GANHO_MASSA_MUSCULAR,
     MELHORA_SAUDE_INTESTINAL,
     FORTALECIMENTO_SISTEMA_IMUNOLOGICO,
-    HABITOS_SAUDAVEIS
+    HABITOS_SAUDAVEIS(Arrays.asList("nutriscore"))
 }
