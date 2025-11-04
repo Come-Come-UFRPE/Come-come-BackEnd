@@ -1,0 +1,20 @@
+# Arquivos compilados do Java
+/target/
+*.class
+
+# Logs
+*.log
+
+# Arquivos de IDEs
+.idea/
+.project
+.classpath
+*.iml
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
+
+# Arquivos de configuração local que podem conter senhas
+# Se você tiver um application-local.properties, por exemplo.
+application-local.properties
