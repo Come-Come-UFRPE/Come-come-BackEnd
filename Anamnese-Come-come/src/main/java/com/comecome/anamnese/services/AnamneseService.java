@@ -4,8 +4,12 @@ import com.comecome.anamnese.dtos.AnamnesePatchRecordDTO;
 import com.comecome.anamnese.dtos.AnamneseResponseDTO;
 import com.comecome.anamnese.models.Anamnese;
 import com.comecome.anamnese.repositories.AnamneseRepository;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.HashSet;
 import java.util.UUID;
@@ -14,15 +18,28 @@ import java.util.UUID;
 public class AnamneseService {
 
     private final AnamneseRepository repository;
+    private static final String fila = "anamnese-criada";
+    private final RabbitTemplate rabbitTemplate;
 
-    public AnamneseService(AnamneseRepository anamneseRepository) {
+    public AnamneseService(AnamneseRepository anamneseRepository, RabbitTemplate rabbitTemplate) {
         this.repository = anamneseRepository;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @Transactional
     public AnamneseResponseDTO save(Anamnese anamnese){
-        Anamnese savedEntity = repository.save(anamnese);
-        return AnamneseResponseDTO.fromEntity(savedEntity);
+
+            Anamnese savedEntity = repository.save(anamnese);
+
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    AnamneseResponseDTO evento = new AnamneseResponseDTO(anamnese);
+                    rabbitTemplate.convertAndSend("",fila, evento );
+                }
+            });
+            return AnamneseResponseDTO.fromEntity(savedEntity);
+
     }
 
     public AnamneseResponseDTO getAnamneseById(UUID id){
@@ -70,4 +87,5 @@ public class AnamneseService {
 
         return repository.save(updateAnamnese);
     }
+
 }
