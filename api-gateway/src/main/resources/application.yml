@@ -39,6 +39,26 @@ spring:
       host: localhost #server do redis, o redis cuida da limitacao de requisicoes
       port: 6379
 
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - url: /v3/api-docs
+        name: API Gateway Service
+
+      - url: /cadastro/v3/api-docs
+        name: User API Service
+
+      - url: /anamnese/v3/api-docs
+        name: Anamnese API Service
+
+      - url: /openfoodfacts/v3/api-docs
+        name: Open Food Facts API Service
+
 eureka: #nessa parte, mostramos como o servico se registra no eureka, se nao for feito, nao sera possivel encontrar
   client:
     register-with-eureka: true
