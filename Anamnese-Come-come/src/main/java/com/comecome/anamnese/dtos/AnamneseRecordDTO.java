@@ -9,8 +9,10 @@ import jakarta.validation.constraints.Positive;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
-public record AnamneseRecordDTO(@Positive(message = "Peso deve ser positivo")
+public record AnamneseRecordDTO( UUID userID,
+                                @Positive(message = "Peso deve ser positivo")
                                 @Max(value = 500, message = "Peso não pode exceder 500kg")
                                 Double peso,
 
@@ -35,6 +37,7 @@ public record AnamneseRecordDTO(@Positive(message = "Peso deve ser positivo")
                                 Set<Diet> diet) {
     public Anamnese toEntity() {
         Anamnese anamnese = new Anamnese();
+        anamnese.setUserID(this.userID);
         anamnese.setPeso(this.peso);
         anamnese.setAltura(this.altura);
         anamnese.setIdade(this.idade);

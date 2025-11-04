@@ -1,9 +1,12 @@
 package com.comecome.cadastro.services;
 
 import com.comecome.cadastro.dtos.UserPatchRecordDto;
+import com.comecome.cadastro.dtos.UserRecordDto;
 import com.comecome.cadastro.dtos.UserResponseDTO;
 import com.comecome.cadastro.models.User;
 import com.comecome.cadastro.repositories.UserRepository;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,9 +18,12 @@ import java.util.UUID;
 public class UserService {
 
     final UserRepository userRepository;
+    private final RabbitTemplate rabbitTemplate;
+    private final String nomeDaFila = "fila-de-cadastro";
 
-    public UserService(UserRepository userRepository){
+    public UserService(UserRepository userRepository, RabbitTemplate rabbitTemplate){
         this.userRepository = userRepository;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     public List<User> getUsers(){
@@ -37,7 +43,14 @@ public class UserService {
         }
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         user.setPassword(encoder.encode(user.getPassword()));
+
+        UserResponseDTO evento = new UserResponseDTO(user);
+        rabbitTemplate.convertAndSend("","fila-de-cadastro", evento );
+
         return userRepository.save(user);
+
+
+
     }
 
     @Transactional
@@ -63,4 +76,7 @@ public class UserService {
 
         return userRepository.save(userFromDb);
     }
+
+
 }
+

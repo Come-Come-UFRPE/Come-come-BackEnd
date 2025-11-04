@@ -17,6 +17,9 @@ public class Anamnese {
     @Column(name = "anamnese_id")
     private UUID anamneseID;
 
+    @Column(nullable = false, unique = true)
+    private UUID userID;
+
     //Dados básicos como peso, altura, idade e sexo biológico(podemos tirar futuramente?)
     private Double peso;
     private Double altura;
@@ -215,5 +218,13 @@ public class Anamnese {
             return peso / (altura * altura);
         }
         return null;
+    }
+
+    public UUID getUserID() {
+        return userID;
+    }
+
+    public void setUserID(UUID userID) {
+        this.userID = userID;
     }
 }
