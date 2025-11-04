@@ -15,7 +15,7 @@ spring:
           enabled: true
           lower-case-service-id: true
       routes:
-        - id: cadastro #exemplo, devemos colocar aqui os paths dos microsservicos
+        - id: cadastro
           uri: lb://CADASTRO
           predicates:
             - Path=/cadastro/**
