@@ -34,12 +34,13 @@ services:
       - nt-general-come-come
 
   rabbitmq:
-    image: 'rabbitmq:latest'
-    environment:
-      - 'RABBITMQ_DEFAULT_PASS=boilerplate'
-      - 'RABBITMQ_DEFAULT_USER=boilerplate'
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
     ports:
-      - '5672:5672'
+      - "5672:5672"   # Porta AMQP
+      - "15672:15672" # Painel de administração
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq  # <- persistência dos dados
     networks:
       - nt-general-come-come
 
@@ -177,6 +178,9 @@ services:
         condition: service_started
     networks:
       - nt-general-come-come
+
+volumes:
+  rabbitmq_data:
 
 networks:
   nt-general-come-come:
