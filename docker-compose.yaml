@@ -36,11 +36,16 @@ services:
   rabbitmq:
     image: rabbitmq:3.13-management
     container_name: rabbitmq
+    hostname: rabbitmq
     ports:
-      - "5672:5672"   # Porta AMQP
-      - "15672:15672" # Painel de administração
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=boilerplate
+      - RABBITMQ_DEFAULT_PASS=boilerplate
+      - RABBITMQ_NODENAME=rabbit@rabbitmq
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq  # <- persistência dos dados
+      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - nt-general-come-come
 
