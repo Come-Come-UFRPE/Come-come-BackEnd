@@ -4,6 +4,7 @@ import com.comecome.anamnese.dtos.AnamnesePatchRecordDTO;
 import com.comecome.anamnese.dtos.AnamneseResponseDTO;
 import com.comecome.anamnese.models.Anamnese;
 import com.comecome.anamnese.repositories.AnamneseRepository;
+import com.comecome.anamnese.dtos.AnamneseDTO;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,14 +29,20 @@ public class AnamneseService {
 
     @Transactional
     public AnamneseResponseDTO save(Anamnese anamnese){
-
+            System.out.println("Iniciando metodo");
             Anamnese savedEntity = repository.save(anamnese);
+            System.out.println("Salvo no banco de dados");
 
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    AnamneseResponseDTO evento = new AnamneseResponseDTO(anamnese);
+                    System.out.println("After commit iniciado");
+                    AnamneseDTO evento = new AnamneseDTO(anamnese.getUserID());
+
+                    System.out.println("DTO gerado");
+
                     rabbitTemplate.convertAndSend("",fila, evento );
+                    System.out.println("Enviado para fila");
                 }
             });
             return AnamneseResponseDTO.fromEntity(savedEntity);
