@@ -1,5 +1,6 @@
 package com.comecome.cadastro.config;
 
+import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
@@ -13,4 +14,11 @@ public class RabbitConfig {
         return new Jackson2JsonMessageConverter();
     }
 
-}
+    public static final String fila = "anamnese-criada";
+
+    @Bean
+    public Queue anamneseQueue() {
+
+        return new Queue(fila, true);
+
+}}
