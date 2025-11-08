@@ -50,13 +50,13 @@ public class AnamneseService {
     }
 
     public AnamneseResponseDTO getAnamneseById(UUID id){
-        Anamnese anamnese = repository.findByAnamneseID(id).orElseThrow(() -> new RuntimeException("Anamnese não encontrada"));
+        Anamnese anamnese = repository.findByUserID(id).orElseThrow(() -> new RuntimeException("Anamnese não encontrada"));
         return new AnamneseResponseDTO(anamnese);
     }
 
     @Transactional
     public Anamnese partialUpdate(UUID id, AnamnesePatchRecordDTO dto){
-        Anamnese updateAnamnese = repository.findByAnamneseID(id)
+        Anamnese updateAnamnese = repository.findByUserID(id)
                 .orElseThrow(() -> new RuntimeException("Anamnese não encontrada"));
 
         if (dto.peso() != null){
