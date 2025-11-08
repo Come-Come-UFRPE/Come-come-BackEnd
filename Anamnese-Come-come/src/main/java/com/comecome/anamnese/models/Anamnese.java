@@ -22,7 +22,7 @@ public class Anamnese {
 
     //Dados básicos como peso, altura, idade e sexo biológico(podemos tirar futuramente?)
     private Double peso;
-    private Double altura;
+    private Integer altura;
     private Integer idade;
 
     @Enumerated(EnumType.STRING)
@@ -86,11 +86,11 @@ public class Anamnese {
         this.peso = peso;
     }
 
-    public Double getAltura() {
+    public Integer getAltura() {
         return altura;
     }
 
-    public void setAltura(Double altura) {
+    public void setAltura(Integer altura) {
         this.altura = altura;
     }
 
@@ -215,7 +215,9 @@ public class Anamnese {
 
     public Double calcularIMC() {
         if (peso != null && altura != null && altura > 0) {
-            return peso / (altura * altura);
+            // Passar altura para metros, após isso calcular o IMC
+            double alturaM = (double) altura / 100;
+            return peso / (alturaM * alturaM);
         }
         return null;
     }
