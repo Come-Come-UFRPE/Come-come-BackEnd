@@ -17,8 +17,8 @@ public record AnamneseRecordDTO( UUID userID,
                                 Double peso,
 
                                 @Positive(message = "Altura deve ser positiva")
-                                @Max(value = 3, message = "Altura não pode exceder 3 metros")
-                                Double altura,
+                                @Max(value = 400, message = "Altura não pode exceder 400cm")
+                                Integer altura,
 
                                 @Min(value = 0, message = "Idade não pode ser negativa")
                                 @Max(value = 150, message = "Idade não pode exceder 150 anos")

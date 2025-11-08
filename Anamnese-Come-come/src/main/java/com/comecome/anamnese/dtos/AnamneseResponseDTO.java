@@ -9,7 +9,7 @@ import java.util.UUID;
 public record AnamneseResponseDTO(UUID anamneseID,
                                   UUID userID,
                                   Double peso,
-                                  Double altura,
+                                  Integer altura,
                                   Integer idade,
                                   Gender sexo,
                                   Objective objective,
