@@ -1,5 +1,6 @@
 package com.comecome.openfoodfacts.service;
 
+import com.comecome.openfoodfacts.dtos.AnamnesePatchDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
@@ -33,6 +34,9 @@ public class OpenFoodFactsService {
     @Autowired
     private IngredientTranslationService ingredientTranslationService;
 
+    @Autowired
+    private FilteringResponseService filteringResponseService;
+
 
     public OpenFoodFactsService(WebClient.Builder webClientBuilder) {
 
@@ -50,7 +54,7 @@ public class OpenFoodFactsService {
                 .exchangeStrategies(exchangeStrategies).build();
     }
 
-    public Mono<Map> searchProducts(String query, String countryCode) { //montagem da url
+    public Mono<Map> searchProducts(String query, String countryCode, AnamnesePatchDto anamnese) { //montagem da url
 
         boolean isBarcode = query != null && query.matches("\\d+"); //regex verifica se a string é apenas numerica
 
@@ -63,7 +67,7 @@ public class OpenFoodFactsService {
                             .queryParam("search_simple", "1")
                             .queryParam("action", "process")
                             .queryParam("json", "1")
-                            .queryParam("fields", "nutrient_levels,ingredients,nutriments,nutrition_grade_fr,allergens,image_front_url,product_name"); //limita só as coisas interessantes para nós
+                            .queryParam("fields", "nutrient_levels,ingredients,nutriments,nutrition_grade_fr,allergens,image_front_url,product_name,ingredients_analysis_tags"); //limita só as coisas interessantes para nós
 
                     // Adiciona filtro de país apenas se fornecido
                     if (countryCode != null && !countryCode.trim().isEmpty()) {
@@ -83,11 +87,27 @@ public class OpenFoodFactsService {
                     List<Map<String, Object>> produtos = (List<Map<String, Object>>) apiResponse.get("products");
 
                     List<ProductResponseDto> produtosDto = produtos.stream()
-                            .map(this::toProductResponseDto)
+                            // Filtra os produtos
+                            .filter(produto ->
+                                    produto.containsKey("ingredients") && // 1. Garante que a chave 'ingredients' existe
+                                            produto.get("ingredients") != null && // 2. Garante que o valor da chave não é nulo
+                                            !((List<?>) produto.get("ingredients")).isEmpty() // 3. (Opcional) Garante que a lista não é vazia
+                            )
+                            // Mapeia apenas os produtos que passaram pelo filtro
+                            .map(produtoRaw -> this.toProductResponseDto(produtoRaw, List.of()))
                             .toList();
 
                     return Map.of("products", produtosDto);
-                });}
+                })
+                .flatMap(mapOfProducts -> {
+                        // Precisamos do Mono<Map> para o filteringResponse, mas aqui já é o Map desembrulhado.
+                        // Vamos refatorar o FilteringResponseService para aceitar o Map<String, List<ProductResponseDto>>
+
+                        // Se você não quer mudar a assinatura do filteringResponseService:
+                    Mono<Map<String, List<ProductResponseDto>>> monoWithCorrectType = Mono.just(mapOfProducts);
+
+                    return filteringResponseService.filteringResponse(monoWithCorrectType, anamnese);
+                    });}
         else{
 
             return web2.get() //busca por barcode
@@ -145,7 +165,7 @@ public class OpenFoodFactsService {
 
 
 
-    private ProductResponseDto toProductResponseDto(Map<String, Object> produto) {
+    private ProductResponseDto toProductResponseDto(Map<String, Object> produto, List<String> initialViolations) {
         String name = (String) produto.getOrDefault("product_name", "Sem nome");
         String image = (String) produto.get("image_front_url");
 
@@ -181,10 +201,23 @@ public class OpenFoodFactsService {
                 .map(Object::toString)
                 .toList();
         }
+
+        //Ingredients tags
+        Object rawIngredientTag = produto.get("ingredients_analysis_tags");
+        List<String> ingredientAnalysisTags = null;
+
+        if (rawIngredientTag instanceof List<?>) {
+            // Agora faz o cast para Lista e mapeia os elementos para String
+            ingredientAnalysisTags = ((List<?>) rawIngredientTag)
+                    .stream()
+                    .map(Object::toString)
+                    .toList();
+        }
+
         String nutritionGrade = (String) produto.get("nutrition_grade_fr");
 
-        ProductDetailsDto details = new ProductDetailsDto(allergens, ingredients, nutrientLevels, nutriments, nutritionGrade);
-        return new ProductResponseDto(name, image, details);
+        ProductDetailsDto details = new ProductDetailsDto(allergens, ingredients, nutrientLevels, nutriments, ingredientAnalysisTags, nutritionGrade);
+        return new ProductResponseDto(name, image, details,initialViolations);
     }
 
 
