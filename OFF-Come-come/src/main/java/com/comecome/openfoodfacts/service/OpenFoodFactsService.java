@@ -1,18 +1,16 @@
 package com.comecome.openfoodfacts.service;
 
+import com.comecome.openfoodfacts.dtos.responseDtos.*;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriBuilder;
 
-import com.comecome.openfoodfacts.dtos.responseDtos.IngredientDto;
-import com.comecome.openfoodfacts.dtos.responseDtos.NutrientLevelsDto;
-import com.comecome.openfoodfacts.dtos.responseDtos.ProductDetailsDto;
-import com.comecome.openfoodfacts.dtos.responseDtos.ProductResponseDto;
-
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +21,7 @@ public class OpenFoodFactsService {
 
     private static final String BASE_URL = "https://world.openfoodfacts.org/cgi/search.pl"; //url base texto
     private static final String CODE_URL = "https://world.openfoodfacts.org/api/v2/product/"; //url barcode
+    private static final String historico = "fila-historico";
 
     private final WebClient webClient;
     private final WebClient web2;
@@ -33,8 +32,11 @@ public class OpenFoodFactsService {
     @Autowired
     private IngredientTranslationService ingredientTranslationService;
 
+    private final RabbitTemplate rabbitTemplate;
 
-    public OpenFoodFactsService(WebClient.Builder webClientBuilder) {
+
+    public OpenFoodFactsService(WebClient.Builder webClientBuilder, RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
 
         ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
                 .codecs(configurer ->
@@ -50,7 +52,9 @@ public class OpenFoodFactsService {
                 .exchangeStrategies(exchangeStrategies).build();
     }
 
-    public Mono<Map> searchProducts(String query, String countryCode) { //montagem da url
+    public Mono<Map> searchProducts(AnamneseSearchDTO search, String countryCode) { //montagem da url
+
+        String query = search.getQuery();
 
         boolean isBarcode = query != null && query.matches("\\d+"); //regex verifica se a string é apenas numerica
 
@@ -85,6 +89,12 @@ public class OpenFoodFactsService {
                     List<ProductResponseDto> produtosDto = produtos.stream()
                             .map(this::toProductResponseDto)
                             .toList();
+
+                    search.setDataDaBusca(LocalDateTime.now());
+
+                    rabbitTemplate.convertAndSend(historico, search);
+                    System.out.println("Enviado para fila");
+
 
                     return Map.of("products", produtosDto);
                 });}
