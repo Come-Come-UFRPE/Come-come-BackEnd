@@ -78,7 +78,7 @@ public class OpenFoodFactsService {
                 })
                 .retrieve()
                 .bodyToMono(Map.class)
-                .map(this::translateAllergen)
+                // .map(this::translateAllergen)
                 .map(apiResponse -> {
                     if (apiResponse == null || !apiResponse.containsKey("products")) {
                         return apiResponse;
@@ -107,7 +107,8 @@ public class OpenFoodFactsService {
                     Mono<Map<String, List<ProductResponseDto>>> monoWithCorrectType = Mono.just(mapOfProducts);
 
                     return filteringResponseService.filteringResponse(monoWithCorrectType, anamnese);
-                    });}
+                    })
+                .map(this::translateProducts);}
         else{
 
             return web2.get() //busca por barcode
@@ -117,6 +118,56 @@ public class OpenFoodFactsService {
 
         }
     }
+
+    private Map<String, List<ProductResponseDto>> translateProducts(Map<String, List<ProductResponseDto>> apiResponse) {
+        if (apiResponse == null || !apiResponse.containsKey("products")) {
+            return apiResponse;
+        }
+
+        List<ProductResponseDto> produtos = apiResponse.get("products").stream()
+                .map(produto -> {
+                    ProductDetailsDto details = produto.details();
+
+                    // Traduz alérgenos
+                    List<String> translatedAllergens = details.allergens() != null
+                            ? allergenTranslationService.translateAllergen(String.join(",", details.allergens()))
+                            : null;
+
+                    // Traduz ingredientes
+                    List<IngredientDto> translatedIngredients = details.ingredients() != null
+                            ? details.ingredients().stream()
+                                .map(ing -> new IngredientDto(
+                                        ing.id(),
+                                        ing.percent_estimate(),
+                                        ingredientTranslationService.translate(ing.text()),
+                                        ing.vegan(),
+                                        ing.vegetarian(),
+                                        ing.ingredients()
+                                ))
+                                .toList()
+                            : null;
+
+                    ProductDetailsDto newDetails = new ProductDetailsDto(
+                            translatedAllergens,
+                            translatedIngredients,
+                            details.nutrient_levels(),
+                            details.nutriments(),
+                            details.ingredient_tags(),
+                            details.nutrition_grade_fr()
+                    );
+
+                    return new ProductResponseDto(
+                            produto.name(),
+                            produto.image(),
+                            newDetails,
+                            produto.violations()
+                    );
+                })
+                .toList();
+
+        return Map.of("products", produtos);
+    }
+
 
     //* Método utilitário para traduzir alérgenos em uma resposta da API
     private Map translateAllergen(Map apiResponse) {
@@ -195,12 +246,17 @@ public class OpenFoodFactsService {
         Map<String, Object> nutriments = nutrimentsRaw != null ? new HashMap<String, Object>(nutrimentsRaw) : null;
 
         List<String> allergens = null;
-        if (produto.get("allergens") instanceof List<?>) {
-            allergens = ((List<?>) produto.get("allergens"))
+        Object allergensRaw = produto.get("allergens");
+        if (allergensRaw instanceof String allergensStr) {
+            // "en:milk,en:nuts"
+            allergens = List.of(allergensStr.split(","));
+        } else if (allergensRaw instanceof List<?>) {
+            allergens = ((List<?>) allergensRaw)
                 .stream()
                 .map(Object::toString)
                 .toList();
         }
+
 
         //Ingredients tags
         Object rawIngredientTag = produto.get("ingredients_analysis_tags");
