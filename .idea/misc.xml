@@ -5,6 +5,11 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/Cadastro-Come-come/pom.xml" />
+        <option value="$PROJECT_DIR$/Anamnese-Come-come/pom.xml" />
+        <option value="$PROJECT_DIR$/api-gateway/pom.xml" />
+        <option value="$PROJECT_DIR$/eureka-server/pom.xml" />
+        <option value="$PROJECT_DIR$/Historico-come-come-main/pom.xml" />
+        <option value="$PROJECT_DIR$/OFF-Come-come/pom.xml" />
       </list>
     </option>
   </component>

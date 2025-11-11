@@ -31,13 +31,13 @@ public class AnamneseController {
         return ResponseEntity.status(HttpStatus.CREATED).body(anamneseService.save(anamnese));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<AnamneseResponseDTO> getAnamnese(@PathVariable("id") UUID id){
+    @GetMapping("/{userID}")
+    public ResponseEntity<AnamneseResponseDTO> getAnamnese(@PathVariable("userID") UUID id){
         return ResponseEntity.ok(anamneseService.getAnamneseById(id));
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<AnamneseResponseDTO> modifyUser(@PathVariable("id") UUID id, @RequestBody AnamnesePatchRecordDTO patchRecordDto){
+    @PatchMapping("/{userID}")
+    public ResponseEntity<AnamneseResponseDTO> modifyUser(@PathVariable("userID") UUID id, @RequestBody AnamnesePatchRecordDTO patchRecordDto){
         Anamnese updateAnamnese = anamneseService.partialUpdate(id, patchRecordDto);
         var anamneseResponseDTO = new AnamneseResponseDTO(updateAnamnese);
 
