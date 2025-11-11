@@ -2,6 +2,7 @@ package com.comecome.anamnese.services;
 
 import com.comecome.anamnese.dtos.AnamnesePatchRecordDTO;
 import com.comecome.anamnese.dtos.AnamneseResponseDTO;
+import com.comecome.anamnese.exceptions.AnamneseNotFoundException;
 import com.comecome.anamnese.models.Anamnese;
 import com.comecome.anamnese.repositories.AnamneseRepository;
 import com.comecome.anamnese.dtos.AnamneseDTO;
@@ -50,14 +51,14 @@ public class AnamneseService {
     }
 
     public AnamneseResponseDTO getAnamneseById(UUID id){
-        Anamnese anamnese = repository.findByUserID(id).orElseThrow(() -> new RuntimeException("Anamnese não encontrada"));
+        Anamnese anamnese = repository.findByUserID(id).orElseThrow(AnamneseNotFoundException::new);
         return new AnamneseResponseDTO(anamnese);
     }
 
     @Transactional
     public Anamnese partialUpdate(UUID id, AnamnesePatchRecordDTO dto){
         Anamnese updateAnamnese = repository.findByUserID(id)
-                .orElseThrow(() -> new RuntimeException("Anamnese não encontrada"));
+                .orElseThrow((AnamneseNotFoundException::new));
 
         if (dto.peso() != null){
             updateAnamnese.setPeso(dto.peso());
