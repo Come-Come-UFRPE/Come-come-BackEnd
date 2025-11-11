@@ -4,18 +4,32 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="533eae67-84af-42d8-aaef-05d527bf8d86" name="Changes" comment="[add] atualizando docker-compose.yaml">
+    <list default="true" id="533eae67-84af-42d8-aaef-05d527bf8d86" name="Changes" comment="[add] final merge">
+      <change afterPath="$PROJECT_DIR$/OFF-Come-come/src/main/java/com/comecome/openfoodfacts/dtos/responseDtos/AnamneseResponseDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/OFF-Come-come/src/main/java/com/comecome/openfoodfacts/controllers/OpenFoodFactsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/OFF-Come-come/src/main/java/com/comecome/openfoodfacts/controllers/OpenFoodFactsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/OFF-Come-come/src/main/java/com/comecome/openfoodfacts/dtos/responseDtos/AnamneseSearchDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/OFF-Come-come/src/main/java/com/comecome/openfoodfacts/dtos/AnamneseSearchDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/OFF-Come-come/src/main/java/com/comecome/openfoodfacts/service/OpenFoodFactsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/OFF-Come-come/src/main/java/com/comecome/openfoodfacts/service/OpenFoodFactsService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="feature/filtering_foods" />
+        <entry key="$PROJECT_DIR$" value="dev" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -24,6 +38,13 @@
   <component name="KubernetesApiProvider">{
   &quot;isMigrated&quot;: true
 }</component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
   </component>
@@ -31,6 +52,9 @@
   &quot;associatedIndex&quot;: 3
 }</component>
   <component name="ProjectId" id="34pwVlQZNwRZSSmaD0gjV92YWEn" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -56,10 +80,10 @@
     &quot;Spring Boot.CadastroApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.EurekaServerApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.OpenfoodfactsApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/merge&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;#7 on historico&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Kabum/IdeaProjects/Come-Come-Geral&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/pabol/Desktop/Come-Come&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -94,6 +118,19 @@
     </option>
   </component>
   <component name="RunManager" selected="Docker.docker-compose.yaml: Compose Deployment">
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="cadastro" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="cadastro" />
+      <option name="filePath" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name=" OFF-Come-come [wrapper:wrapper]" type="MavenRunConfiguration" factoryName="Maven">
       <MavenSettings>
         <option name="myGeneralSettings">
@@ -225,14 +262,14 @@
     <configuration name="AnamneseApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <option name="ALTERNATIVE_JRE_PATH" value="21" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
-      <module name="Come-Come-Geral" />
+      <module name="anamnese" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.comecome.anamnese.AnamneseApplication" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
     <configuration name="ApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
-      <module name="Come-Come-Geral" />
+      <module name="api-gateway" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.comecome.api_gateway.ApiGatewayApplication" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -248,6 +285,13 @@
     <configuration name="EurekaServerApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="eureka-server" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.eureka.eureka_server.EurekaServerApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="HistoricoComeComeApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="historicocomecome" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.historico_Come_Come.HistoricoComeComeApplication" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -277,6 +321,7 @@
       <item itemvalue="Docker.docker-compose.yaml: Compose Deployment" />
       <item itemvalue="Maven. OFF-Come-come [wrapper:wrapper]" />
       <item itemvalue="Maven.cadastro [wrapper:wrapper]" />
+      <item itemvalue="Spring Boot.HistoricoComeComeApplication" />
       <item itemvalue="Spring Boot.AnamneseApplication" />
       <item itemvalue="Spring Boot.ApiGatewayApplication" />
       <item itemvalue="Spring Boot.CadastroApplication" />
@@ -328,6 +373,8 @@
       <workItem from="1762213320265" duration="11000" />
       <workItem from="1762213338021" duration="41000" />
       <workItem from="1762213391987" duration="3817000" />
+      <workItem from="1762574051971" duration="184000" />
+      <workItem from="1762899985105" duration="1649000" />
     </task>
     <task id="LOCAL-00001" summary="[fix] docker compose novamente">
       <option name="closed" value="true" />
@@ -417,7 +464,39 @@
       <option name="project" value="LOCAL" />
       <updated>1762215835001</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="[add]">
+      <option name="closed" value="true" />
+      <created>1762900012618</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1762900012618</updated>
+    </task>
+    <task id="LOCAL-00013" summary="[add]">
+      <option name="closed" value="true" />
+      <created>1762900015729</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1762900015729</updated>
+    </task>
+    <task id="LOCAL-00014" summary="[add]">
+      <option name="closed" value="true" />
+      <created>1762900021511</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1762900021511</updated>
+    </task>
+    <task id="LOCAL-00015" summary="[add] final merge">
+      <option name="closed" value="true" />
+      <created>1762900218538</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1762900218538</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -430,6 +509,8 @@
     <MESSAGE value="[commit] docker compose build" />
     <MESSAGE value="[commit] agora todos estão ativos" />
     <MESSAGE value="[add] atualizando docker-compose.yaml" />
-    <option name="LAST_COMMIT_MESSAGE" value="[add] atualizando docker-compose.yaml" />
+    <MESSAGE value="[add]" />
+    <MESSAGE value="[add] final merge" />
+    <option name="LAST_COMMIT_MESSAGE" value="[add] final merge" />
   </component>
 </project>
