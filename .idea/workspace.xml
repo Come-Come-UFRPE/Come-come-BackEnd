@@ -5,14 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="533eae67-84af-42d8-aaef-05d527bf8d86" name="Changes" comment="[add] final merge">
-      <change afterPath="$PROJECT_DIR$/OFF-Come-come/src/main/java/com/comecome/openfoodfacts/dtos/responseDtos/AnamneseResponseDTO.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_02_11_2025_00_37__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_02_11_2025_00_37__Changes_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_02_11_2025_23_56_[Changes]/shelved.patch" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_02_11_2025_23_56__Changes_.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_08_11_2025_00_50__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_08_11_2025_00_50__Changes_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_08_11_2025_22_58__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_08_11_2025_22_58__Changes_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_08_11_2025_22_58__Changes_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_08_11_2025_22_58__Changes_1.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/OFF-Come-come/src/main/java/com/comecome/openfoodfacts/controllers/OpenFoodFactsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/OFF-Come-come/src/main/java/com/comecome/openfoodfacts/controllers/OpenFoodFactsController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/OFF-Come-come/src/main/java/com/comecome/openfoodfacts/dtos/responseDtos/AnamneseSearchDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/OFF-Come-come/src/main/java/com/comecome/openfoodfacts/dtos/AnamneseSearchDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/OFF-Come-come/src/main/java/com/comecome/openfoodfacts/service/OpenFoodFactsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/OFF-Come-come/src/main/java/com/comecome/openfoodfacts/service/OpenFoodFactsService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,6 +35,18 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;UelitoWV&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Come-Come-UFRPE/Come-come-BackEnd.git&quot;,
+    &quot;accountId&quot;: &quot;4aa2b18a-805d-40ab-8ec7-d687991c0c3f&quot;
+  }
+}</component>
   <component name="KubernetesApiPersistence">{}</component>
   <component name="KubernetesApiProvider">{
   &quot;isMigrated&quot;: true
@@ -80,7 +93,7 @@
     &quot;Spring Boot.CadastroApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.EurekaServerApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.OpenfoodfactsApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;#7 on historico&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/pabol/Desktop/Come-Come&quot;,
@@ -375,6 +388,7 @@
       <workItem from="1762213391987" duration="3817000" />
       <workItem from="1762574051971" duration="184000" />
       <workItem from="1762899985105" duration="1649000" />
+      <workItem from="1762903148609" duration="296000" />
     </task>
     <task id="LOCAL-00001" summary="[fix] docker compose novamente">
       <option name="closed" value="true" />
@@ -496,7 +510,31 @@
       <option name="project" value="LOCAL" />
       <updated>1762900218538</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="[add] final merge">
+      <option name="closed" value="true" />
+      <created>1762902459932</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1762902459932</updated>
+    </task>
+    <task id="LOCAL-00017" summary="[add] final merge">
+      <option name="closed" value="true" />
+      <created>1762902501362</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1762902501362</updated>
+    </task>
+    <task id="LOCAL-00018" summary="[add] final merge">
+      <option name="closed" value="true" />
+      <created>1762902523145</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1762902523145</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

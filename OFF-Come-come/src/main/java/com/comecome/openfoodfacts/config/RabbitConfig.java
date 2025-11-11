@@ -16,8 +16,8 @@ public class RabbitConfig {
         return new Jackson2JsonMessageConverter();
     }
 
-    @Bean
-    public Queue queue() {
-        return new Queue(queue, true);
-    }
+//    @Bean
+//    public Queue queue() {
+//        return new Queue(queue, true);
+//    }
 }
