@@ -1,5 +1,6 @@
 package com.comecome.openfoodfacts.service;
 
+import com.comecome.openfoodfacts.dtos.AnamneseResponseDto;
 import com.comecome.openfoodfacts.dtos.AnamnesePatchDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Mono;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class OpenFoodFactsService {
@@ -25,8 +27,10 @@ public class OpenFoodFactsService {
     private static final String BASE_URL = "https://world.openfoodfacts.org/cgi/search.pl"; //url base texto
     private static final String CODE_URL = "https://world.openfoodfacts.org/api/v2/product/"; //url barcode
 
+
     private final WebClient webClient;
     private final WebClient web2;
+
 
     @Autowired
     private AllergenTranslationService allergenTranslationService;
@@ -36,6 +40,9 @@ public class OpenFoodFactsService {
 
     @Autowired
     private FilteringResponseService filteringResponseService;
+
+    @Autowired
+    private GetAnamneseService getAnamneseService;
 
 
     public OpenFoodFactsService(WebClient.Builder webClientBuilder) {
@@ -54,7 +61,7 @@ public class OpenFoodFactsService {
                 .exchangeStrategies(exchangeStrategies).build();
     }
 
-    public Mono<Map> searchProducts(String query, String countryCode, AnamnesePatchDto anamnese) { //montagem da url
+    public Mono<Map> searchProducts(String query, String countryCode, UUID userId) { //montagem da url
 
         boolean isBarcode = query != null && query.matches("\\d+"); //regex verifica se a string é apenas numerica
 
@@ -100,14 +107,16 @@ public class OpenFoodFactsService {
                     return Map.of("products", produtosDto);
                 })
                 .flatMap(mapOfProducts -> {
-                        // Precisamos do Mono<Map> para o filteringResponse, mas aqui já é o Map desembrulhado.
-                        // Vamos refatorar o FilteringResponseService para aceitar o Map<String, List<ProductResponseDto>>
 
-                        // Se você não quer mudar a assinatura do filteringResponseService:
-                    Mono<Map<String, List<ProductResponseDto>>> monoWithCorrectType = Mono.just(mapOfProducts);
+                    Mono<AnamnesePatchDto> anamneseMono = getAnamneseService.getAnamneseById(userId);
 
-                    return filteringResponseService.filteringResponse(monoWithCorrectType, anamnese);
-                    });}
+                    return anamneseMono.map(anamneseDto -> {
+                        // 'anamneseDto' é o DTO real "desembrulhado"
+
+                        return filteringResponseService.filteringResponse(mapOfProducts, anamneseDto);
+                    });
+                });
+}
         else{
 
             return web2.get() //busca por barcode

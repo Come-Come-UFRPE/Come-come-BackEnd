@@ -20,35 +20,31 @@ import java.util.stream.Stream;
 @Service
 public class FilteringResponseService {
 
+    public Map<String, List<ProductResponseDto>> filteringResponse(
+            Map<String, List<ProductResponseDto>> rawResponse, // <-- 2. O parâmetro é Map (não Mono)
+            AnamnesePatchDto anamnesePatchDto) {
 
-    public Mono<Map<String, List<ProductResponseDto>>> filteringResponse(Mono<Map<String, List<ProductResponseDto>>> rawResponse, AnamnesePatchDto anamnesePatchDto) {
+        List<ProductResponseDto> produtos = rawResponse.get("products");
 
-        return rawResponse.map(apiResponse -> {
+        List<ProductResponseDto> produtosComViolacoes = produtos.stream()
+                .map(produto -> {
 
-            List<ProductResponseDto> produtos = apiResponse.get("products");
+                    List<String> todasAsViolacoes = validateProduct(produto, anamnesePatchDto);
 
-            List<ProductResponseDto> produtosComViolacoes = produtos.stream()
-                    .map(produto -> {
+                    return new ProductResponseDto(
+                            produto.name(),
+                            produto.image(),
+                            produto.details(),
+                            todasAsViolacoes
+                    );
+                })
+                .toList();
 
-                        // 1. Coleta TODAS as violações de UMA VEZ
-                        List<String> todasAsViolacoes = validateProduct(produto, anamnesePatchDto);
-
-                        // 2. ATUALIZAÇÃO DO DTO (REQUIERE UM CONSTRUTOR DE CÓPIA OU CAMPO EXTRA)
-                        // Se seu ProductResponseDto for: public record ProductResponseDto(String name, String image, ProductDetailsDto details, List<String> violations)
-                        return new ProductResponseDto(
-                                produto.name(),
-                                produto.image(),
-                                produto.details(),
-                                todasAsViolacoes // Campo 'violations' preenchido
-                        );
-                    })
-                    .toList();
-
-            // (Opcional) Filtragem Crítica pode ocorrer aqui, se necessário.
-
-            return Map.of("products", produtosComViolacoes);
-        });
+        return Map.of("products", produtosComViolacoes);
     }
+
+    // ... (o resto da sua classe 'validateProduct', etc. continua igual)
+
 
 
 
@@ -57,6 +53,8 @@ public class FilteringResponseService {
      */
     private List<String> validateProduct(ProductResponseDto produto, AnamnesePatchDto anamnesePatchDto) {
         List<String> violations = new ArrayList<>();
+
+        System.out.println(anamnesePatchDto.diet());
 
         // --- 1. VIOLAÇÕES DE DIETA ---
         anamnesePatchDto.diet().stream()
