@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -19,9 +20,9 @@ public class HistoryController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<HistoryRecord>> getHistoryByUser(@PathVariable UUID userId) {
+    public ResponseEntity<Set<HistoryRecord>> getHistoryByUser(@PathVariable UUID userId) {
 
-        List<HistoryRecord> historyList = historyService.getHistoryByUserId(userId);
+        Set<HistoryRecord> historyList = historyService.getHistoryByUserId(userId);
 
         return ResponseEntity.ok(historyList);
     }

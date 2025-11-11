@@ -6,7 +6,9 @@ import com.historico_Come_Come.repositories.HistoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -19,14 +21,31 @@ public class HistoryService {
         this.historyRepository = historyRepository;
     }
 
-    public List<HistoryRecord> getHistoryByUserId(UUID userId) {
+    public Set<HistoryRecord> getHistoryByUserId(UUID userId) {
 
         List<HistoryModel> models = historyRepository.findByUserId(userId);
 
-        return models.stream()
+        Collection<HistoryModel> modelosUnicos = models.stream()
+                .collect(Collectors.toMap(
+
+                        model -> model.getUserId().toString() + "::" + model.getNomeProduto(),
+
+                        model -> model,
+
+
+                        (modeloAntigo, modeloNovo) ->
+                                modeloNovo.getData().isAfter(modeloAntigo.getData())
+                                        ? modeloNovo
+                                        : modeloAntigo
+                ))
+                .values();
+
+
+        return modelosUnicos.stream()
                 .map(this::convertToDto)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
+
 
     @Transactional
     public void deleteByUserId(UUID id) {
