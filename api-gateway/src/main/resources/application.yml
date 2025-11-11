@@ -34,6 +34,10 @@ spring:
           uri: lb://OPENFOODFACTS
           predicates:
             - Path=/openfoodfacts/**
+        - id: historico
+          uri: lb://HISTORICO
+          predicates:
+            - Path=/history/**
   data:
     redis:
       host: localhost #server do redis, o redis cuida da limitacao de requisicoes
@@ -58,6 +62,9 @@ springdoc:
 
       - url: /openfoodfacts/v3/api-docs
         name: Open Food Facts API Service
+
+      - url: /historico/v3/api-docs
+        name: Historico API Service
 
 eureka: #nessa parte, mostramos como o servico se registra no eureka, se nao for feito, nao sera possivel encontrar
   client:

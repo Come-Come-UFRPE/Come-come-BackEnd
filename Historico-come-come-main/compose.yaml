@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: ms-history
+      POSTGRES_USER: boilerplate
+      POSTGRES_PASSWORD: boilerplate
+    ports:
+      - "5437:5432"
+
+      #rabbitmq:
+    #image: 'rabbitmq:latest'
+    #environment:
+     # - 'RABBITMQ_DEFAULT_PASS=secret'
+     # - 'RABBITMQ_DEFAULT_USER=myuser'
+    #ports:
+     # - '5672'
