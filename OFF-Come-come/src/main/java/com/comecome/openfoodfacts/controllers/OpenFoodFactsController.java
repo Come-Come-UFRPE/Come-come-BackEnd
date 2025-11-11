@@ -1,10 +1,8 @@
 package com.comecome.openfoodfacts.controllers;
 
+import com.comecome.openfoodfacts.dtos.AnamneseSearchDTO;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.comecome.openfoodfacts.service.OpenFoodFactsService;
 
@@ -21,9 +19,9 @@ public class OpenFoodFactsController {
         this.openFoodFactsService = openFoodFactsService;
     }
 
-    @GetMapping("/search")
-    public Mono<ResponseEntity<?>> searchProducts(@RequestParam String query) {
-        return openFoodFactsService.searchProducts(query,"en:brazil").map(ResponseEntity::ok);
+    @PostMapping("/search")
+    public Mono<ResponseEntity<?>> searchProducts(@RequestBody AnamneseSearchDTO search) {
+        return openFoodFactsService.searchProducts(search, "en:brazil", search.getUserID()).map(ResponseEntity::ok);
     }
 
 }
