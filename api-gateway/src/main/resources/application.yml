@@ -34,6 +34,10 @@ spring:
           uri: lb://OPENFOODFACTS
           predicates:
             - Path=/openfoodfacts/**
+        - id: history
+          uri: lb://history
+          predicates:
+            - Path=/history/**
   data:
     redis:
       host: localhost #server do redis, o redis cuida da limitacao de requisicoes
