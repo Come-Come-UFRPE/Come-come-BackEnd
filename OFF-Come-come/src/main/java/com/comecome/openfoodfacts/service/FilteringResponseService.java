@@ -281,26 +281,137 @@ public class FilteringResponseService {
     private boolean checkIfContainsLactose(ProductResponseDto produto){
         List<String> allergens = produto.details().allergens();
 
-        //Verificar nos alergênicos
+        //* Verifica nos alergêncios
+        if (allergens != null && !allergens.isEmpty()) {
+            boolean hasMilkAllergen = allergens.stream()
+                    .anyMatch(allergen -> allergen != null &&
+                            allergen.toLowerCase().contains("milk") || 
+                            allergen.toLowerCase().contains("lactose") );
+            if (hasMilkAllergen) return true;
+        }
+
+        //* Verifica nos ingredientes
+        List<String> ingredientTags = produto.details().ingredient_tags();
+        if (ingredientTags != null && !ingredientTags.isEmpty()) {
+            boolean hasMilkTag = ingredientTags.stream()
+                    .anyMatch(tag -> tag != null && (
+                            tag.equals("en:milk") ||
+                            tag.equals("en:lactose") ||
+                            tag.equals("en:dairy") ||
+                            tag.startsWith("en:milk-") ||
+                            tag.startsWith("en:cheese") ||
+                            tag.startsWith("en:whey") ||
+                            tag.startsWith("en:casein")
+                    ));
+            if (hasMilkTag) return true;
+        }
+
         return false;
     }
 
-    private boolean checkIfContainsEgg(ProductResponseDto produto){
+    private boolean checkIfContainsEgg(ProductResponseDto produto) {
+        List<String> allergens = produto.details().allergens();
+        if (allergens != null && !allergens.isEmpty()) {
+            boolean hasEggAllergen = allergens.stream()
+                    .anyMatch(allergen -> allergen != null &&
+                            allergen.toLowerCase().contains("egg"));
+            if (hasEggAllergen) return true;
+        }
+
+        List<String> ingredientTags = produto.details().ingredient_tags();
+        if (ingredientTags != null && !ingredientTags.isEmpty()) {
+            boolean hasEggTag = ingredientTags.stream()
+                    .anyMatch(tag -> tag != null && (
+                            tag.equals("en:egg") ||
+                            tag.startsWith("en:egg-") ||
+                            tag.startsWith("en:albumen")
+                    ));
+            if (hasEggTag) return true;
+        }
+
         return false;
     }
 
-    private boolean checkIfContainsWheat(ProductResponseDto produto){
+    private boolean checkIfContainsWheat(ProductResponseDto produto) {
+        List<String> allergens = produto.details().allergens();
+        if (allergens != null && !allergens.isEmpty()) {
+            boolean hasWheatAllergen = allergens.stream()
+                    .anyMatch(allergen -> allergen != null &&
+                            allergen.toLowerCase().contains("wheat"));
+            if (hasWheatAllergen) return true;
+        }
+
+        List<String> ingredientTags = produto.details().ingredient_tags();
+        if (ingredientTags != null && !ingredientTags.isEmpty()) {
+            boolean hasWheatTag = ingredientTags.stream()
+                    .anyMatch(tag -> tag != null && (
+                            tag.equals("en:wheat") ||
+                            tag.startsWith("en:wheat-") ||
+                            tag.startsWith("en:gluten")
+                    ));
+            if (hasWheatTag) return true;
+        }
+
         return false;
     }
 
-    private boolean checkIfContainsSeaFood(ProductResponseDto produto){
+    private boolean checkIfContainsSeaFood(ProductResponseDto produto) {
+        List<String> allergens = produto.details().allergens();
+        if (allergens != null && !allergens.isEmpty()) {
+            boolean hasSeafoodAllergen = allergens.stream()
+                    .anyMatch(allergen -> allergen != null &&
+                            (allergen.toLowerCase().contains("fish") ||
+                            allergen.toLowerCase().contains("shellfish") ||
+                            allergen.toLowerCase().contains("seafood")));
+            if (hasSeafoodAllergen) return true;
+        }
+
+        List<String> ingredientTags = produto.details().ingredient_tags();
+        if (ingredientTags != null && !ingredientTags.isEmpty()) {
+            boolean hasSeafoodTag = ingredientTags.stream()
+                    .anyMatch(tag -> tag != null && (
+                            tag.equals("en:fish") ||
+                            tag.equals("en:shellfish") ||
+                            tag.equals("en:seafood") ||
+                            tag.startsWith("en:fish-") ||
+                            tag.startsWith("en:crustaceans") ||
+                            tag.startsWith("en:mollusks")
+                    ));
+            if (hasSeafoodTag) return true;
+        }
+
         return false;
     }
 
-    private boolean checkIfContainsNuts(ProductResponseDto produto){
+    private boolean checkIfContainsNuts(ProductResponseDto produto) {
+        List<String> allergens = produto.details().allergens();
+        if (allergens != null && !allergens.isEmpty()) {
+            boolean hasNutAllergen = allergens.stream()
+                    .anyMatch(allergen -> allergen != null &&
+                            (allergen.toLowerCase().contains("nut") ||
+                            allergen.equalsIgnoreCase("en:nuts")));
+            if (hasNutAllergen) return true;
+        }
+
+        List<String> ingredientTags = produto.details().ingredient_tags();
+        if (ingredientTags != null && !ingredientTags.isEmpty()) {
+            boolean hasNutTag = ingredientTags.stream()
+                    .anyMatch(tag -> tag != null && (
+                            tag.equals("en:nuts") ||
+                            tag.startsWith("en:nut-") ||
+                            tag.startsWith("en:almond") ||
+                            tag.startsWith("en:hazelnut") ||
+                            tag.startsWith("en:cashew") ||
+                            tag.startsWith("en:walnut") ||
+                            tag.startsWith("en:pecan") ||
+                            tag.startsWith("en:macadamia") ||
+                            tag.startsWith("en:pistachio")
+                    ));
+            if (hasNutTag) return true;
+        }
+
         return false;
     }
-
 
 
     /*
@@ -427,7 +538,7 @@ public class FilteringResponseService {
     private boolean checkHealthyHabits(ProductResponseDto produto){
         Map<String, Object> nutriments = produto.details().nutriments();
 
-        Double novaGroup = getNutrimentValue(nutriments, "nova_group");
+        Double novaGroup = getNutrimentValue(nutriments, "nova-group"); // coloca "nova-group" aí pfv
 
         //Observa o Nova Group (Alimentos ultra-processados)
         if (novaGroup != null){
@@ -436,4 +547,5 @@ public class FilteringResponseService {
 
         return false;
     }
+
 }
