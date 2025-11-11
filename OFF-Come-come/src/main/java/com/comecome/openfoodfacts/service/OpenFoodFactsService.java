@@ -15,10 +15,7 @@ import com.comecome.openfoodfacts.dtos.responseDtos.ProductResponseDto;
 
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class OpenFoodFactsService {
@@ -110,12 +107,14 @@ public class OpenFoodFactsService {
 
                     Mono<AnamnesePatchDto> anamneseMono = getAnamneseService.getAnamneseById(userId);
 
-                    return anamneseMono.map(anamneseDto -> {
+                    return anamneseMono
+                            .defaultIfEmpty(new AnamnesePatchDto(null, Set.of(), Set.of(), Set.of()))
+                            .map(anamneseDto -> {
                         // 'anamneseDto' é o DTO real "desembrulhado"
 
                         return filteringResponseService.filteringResponse(mapOfProducts, anamneseDto);
-                    }).map(this::translateProducts);
-                });
+                    });
+                }).map(this::translateProducts);
 }
         else{
 

@@ -2,6 +2,7 @@ package com.comecome.openfoodfacts.service;
 
 import com.comecome.openfoodfacts.dtos.AnamneseResponseDto;
 import com.comecome.openfoodfacts.dtos.AnamnesePatchDto;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -30,6 +31,8 @@ public class GetAnamneseService {
         return this.webClient.get()
                 .uri("/{userID}", userId) // Forma mais segura de passar a URI var
                 .retrieve()
+                .onStatus(HttpStatus.NOT_FOUND::equals,
+                        response -> Mono.empty())
                 .bodyToMono(AnamneseResponseDto.class)
                 .map(getDto -> new AnamnesePatchDto(
                         getDto.objective(),
