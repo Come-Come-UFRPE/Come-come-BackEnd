@@ -54,22 +54,27 @@ public class FilteringResponseService {
     private List<String> validateProduct(ProductResponseDto produto, AnamnesePatchDto anamnesePatchDto) {
         List<String> violations = new ArrayList<>();
 
-        System.out.println(anamnesePatchDto.diet());
 
         // --- 1. VIOLAÇÕES DE DIETA ---
-        anamnesePatchDto.diet().stream()
-                .flatMap(diet -> checkDietViolation(produto, diet).stream())
-                .forEach(violations::add); // Adiciona todas as violações de dieta
+        if (anamnesePatchDto.diet() != null) {
+            anamnesePatchDto.diet().stream()
+                    .flatMap(diet -> checkDietViolation(produto, diet).stream())
+                    .forEach(violations::add); // Adiciona todas as violações de dieta
+        }
 
         // --- 2. VIOLAÇÕES DE ALERGIA ---
-        anamnesePatchDto.foodAllergy().stream()
-                .flatMap(allergy -> checkAllergyViolation(produto, allergy).stream())
-                .forEach(violations::add); // Adiciona todas as violações de alergia
+        if (anamnesePatchDto.foodAllergy() != null) {
+            anamnesePatchDto.foodAllergy().stream()
+                    .flatMap(allergy -> checkAllergyViolation(produto, allergy).stream())
+                    .forEach(violations::add); // Adiciona todas as violações de alergia
+        }
 
         // --- 3. VIOLAÇÕES DE CONDIÇÃO DE SAÚDE ---
-        anamnesePatchDto.healthCondition().stream()
-                .flatMap(condition -> checkHealthConditionViolation(produto, condition).stream())
-                .forEach(violations::add); // Adiciona todas as violações de saúde
+        if (anamnesePatchDto.healthCondition() != null) {
+            anamnesePatchDto.healthCondition().stream()
+                    .flatMap(condition -> checkHealthConditionViolation(produto, condition).stream())
+                    .forEach(violations::add); // Adiciona todas as violações de saúde
+        }
 
         // --- 4. VIOLAÇÕES DE OBJETIVO ---
         if (anamnesePatchDto.objective() != null) {
