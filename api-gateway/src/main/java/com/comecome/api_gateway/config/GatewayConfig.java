@@ -59,6 +59,13 @@ public class GatewayConfig { //metodo para obter o ip do usuario para o rate lim
                                 )
                                 .stripPrefix(1))
                         .uri("lb://openfoodfacts"))
+                .route("history", r -> r.path("/history/**")
+                        .filters(f -> f.requestRateLimiter(c ->
+                                        c.setRateLimiter(redisRateLimiter)
+                                                .setKeyResolver(ipKeyResolver)
+                                )
+                                .stripPrefix(1))
+                        .uri("lb://history"))
 
                 .build();
     }
