@@ -1,4 +1,4 @@
-package com.comecome.openfoodfacts.dtos.responseDtos;
+package com.comecome.openfoodfacts.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,5 +13,4 @@ import java.util.UUID;
 public class AnamneseSearchDTO {
     private UUID userID;
     private String query;
-    private LocalDateTime dataDaBusca;
 }

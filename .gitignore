@@ -1,0 +1,12 @@
+# IDE JetBrains
+.idea
+**/.idea/
+**/*.iml
+**/*.iws
+**/*.ipr
+
+# Build/output
+**/out/
+**/build/
+**/target/
+**/node_modules/

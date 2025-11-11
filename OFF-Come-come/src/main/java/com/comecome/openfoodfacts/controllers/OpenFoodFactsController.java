@@ -1,6 +1,6 @@
 package com.comecome.openfoodfacts.controllers;
 
-import com.comecome.openfoodfacts.dtos.responseDtos.AnamneseSearchDTO;
+import com.comecome.openfoodfacts.dtos.AnamneseSearchDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +21,7 @@ public class OpenFoodFactsController {
 
     @PostMapping("/search")
     public Mono<ResponseEntity<?>> searchProducts(@RequestBody AnamneseSearchDTO search) {
-        return openFoodFactsService.searchProducts(search, "en:brazil").map(ResponseEntity::ok);
+        return openFoodFactsService.searchProducts(search, "en:brazil", search.getUserID()).map(ResponseEntity::ok);
     }
 
 }
