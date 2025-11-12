@@ -1,13 +1,37 @@
 name: Deploy application "Come-Come" to Production
 
+# Publicar nas branches dev e feature/workflow ou via workflow_dispatch
 on:
   push:
     branches: [dev, feature/workflow]
+  workflow_dispatch:
 
 jobs:
-  build:
+  # microservice de cadastro
+  build-service-cadastro:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+        - uses: actions/checkout@v5
+        - uses: actions/setup-java@v5
+          with:
+            distribution: 'temurin'
+            java-version: '21'
+        - name: Build service Cadastro 
+          run: mvn clean install -f Cadastro-Come-come/pom.xml
+        
+        # Conectar no Docker hub via secrets do Github
+        - name: Login Docker Hub
+          run: docker login -u ${{secrets.DOCKER_USERNAME}} -p ${{secrets.DOCKER_PASSWORD}}
+        
+        - name: Build and Push Docker Image Cadastro
+          if: |
+            github.event_name == 'workflow_dispatch' ||
+            contains(github.event.head_commit.message, '[build-all]') ||
+            (github.event_name == 'push' && 
+            (contains(join(github.event.commits.*.modified), 'Cadastro-Come-come/') || 
+            contains(join(github.event.commits.*.added), 'Cadastro-Come-come/')))
+          run: |
+            docker build -t cadastro/ms-cadastro:latest -f Cadastro-Come-come/Dockerfile .
+            docker push come-come/ms-cadastro:latest
+

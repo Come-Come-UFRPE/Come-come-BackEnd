@@ -1,0 +1,234 @@
+services:
+
+  # Eureka Server para service discovery
+  eureka-server:
+    build: ./eureka-server/.
+    container_name: eureka-server
+    ports:
+      - '8761:8761'
+    networks:
+      - nt-general-come-come
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway/.
+    ports:
+      - '8083:8083'
+    environment:
+      - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
+      - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
+      - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
+      - 'SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true'
+      - 'SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWERCASE-SERVICE-ID=true'
+      - 'SPRING_DATA_REDIS_HOST=redis'
+      - 'SPRING_DATA_REDIS_PORT=6379'
+      - 'SPRING_DATA_REDIS_PASSWORD=boilerplate'
+      - 'SERVER_PORT=8083'
+      - 'SPRING_APPLICATION_NAME=api-gateway'
+    depends_on:
+      eureka-server:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - nt-general-come-come
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=boilerplate
+      - RABBITMQ_DEFAULT_PASS=boilerplate
+      - RABBITMQ_NODENAME=rabbit@rabbitmq
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - nt-general-come-come
+
+  redis:
+    image: 'redis:latest'
+    ports:
+      - '6379:6379'
+    environment:
+      - 'REDIS_PASSWORD=boilerplate'
+    command: redis-server --requirepass boilerplate
+    networks:
+      - nt-general-come-come
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "boilerplate", "--raw", "incr", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  postgres-off:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=ms-off'
+      - 'POSTGRES_PASSWORD=boilerplate'
+      - 'POSTGRES_USER=postgres'
+      - 'POSTGRES_HOST_AUTH_METHOD=md5'
+    ports:
+      - '5433:5432'
+    networks:
+      - nt-general-come-come
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ms-off:
+    build: ./OFF-Come-come/.
+    ports:
+      - '8082:8082'
+    environment:
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-off:5432/ms-off'
+      - 'SPRING_DATASOURCE_USERNAME=postgres'
+      - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
+      - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
+      - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
+      - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
+      - 'SERVER_PORT=8082'
+      - 'SPRING_APPLICATION_NAME=OPENFOODFACTS'
+    depends_on:
+      eureka-server:
+        condition: service_started
+      postgres-off:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    networks:
+      - nt-general-come-come
+
+  postgres-cadastro:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=ms-cadastro'
+      - 'POSTGRES_PASSWORD=boilerplate'
+      - 'POSTGRES_USER=postgres'
+      - 'POSTGRES_HOST_AUTH_METHOD=md5'
+    ports:
+      - '5431:5432'
+    networks:
+      - nt-general-come-come
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ms-cadastro:
+    build: ./Cadastro-Come-come/.
+    ports:
+      - '8081:8081'
+    environment:
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-cadastro:5432/ms-cadastro'
+      - 'SPRING_DATASOURCE_USERNAME=postgres'
+      - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
+      - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
+      - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
+      - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
+      - 'SERVER_PORT=8081'
+      - 'SPRING_APPLICATION_NAME=CADASTRO'
+    depends_on:
+      eureka-server:
+        condition: service_started
+      postgres-cadastro:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    networks:
+      - nt-general-come-come
+
+  postgres-anamnese:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=ms-anamnese'
+      - 'POSTGRES_PASSWORD=boilerplate'
+      - 'POSTGRES_USER=postgres'
+      - 'POSTGRES_HOST_AUTH_METHOD=md5'
+    ports:
+      - '5434:5432'
+    networks:
+      - nt-general-come-come
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ms-anamnese:
+    build: ./Anamnese-Come-come/.
+    ports:
+      - '8084:8084'
+    environment:
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-anamnese:5432/ms-anamnese'
+      - 'SPRING_DATASOURCE_USERNAME=postgres'
+      - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
+      - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
+      - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
+      - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
+      - 'SERVER_PORT=8084'
+      - 'SPRING_APPLICATION_NAME=ANAMNESE'
+    depends_on:
+      eureka-server:
+        condition: service_started
+      postgres-anamnese:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    networks:
+      - nt-general-come-come
+
+  postgres-historico:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=ms-historico'
+      - 'POSTGRES_PASSWORD=boilerplate'
+      - 'POSTGRES_USER=postgres'
+      - 'POSTGRES_HOST_AUTH_METHOD=md5'
+    ports:
+      - '5437:5432'
+    networks:
+      - nt-general-come-come
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ms-historico:
+    build: ./Historico-come-come-main/.
+    ports:
+      - '8085:8085'
+    environment:
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-historico:5432/ms-historico'
+      - 'SPRING_DATASOURCE_USERNAME=postgres'
+      - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
+      - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
+      - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
+      - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
+      - 'SERVER_PORT=8085'
+      - 'SPRING_APPLICATION_NAME=HISTORICO'
+    depends_on:
+      eureka-server:
+        condition: service_started
+      postgres-historico:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      ms-off:
+        condition: service_started
+    networks:
+      - nt-general-come-come
+
+volumes:
+  rabbitmq_data:
+
+networks:
+  nt-general-come-come:
+    driver: bridge
