@@ -2,6 +2,7 @@ package com.comecome.openfoodfacts.service;
 
 import com.comecome.openfoodfacts.dtos.AnamnesePatchDto;
 import com.comecome.openfoodfacts.dtos.AnamneseSearchDTO;
+import com.comecome.openfoodfacts.dtos.UiFilterDto;
 import com.comecome.openfoodfacts.dtos.responseDtos.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +65,7 @@ public class OpenFoodFactsService {
                 .exchangeStrategies(exchangeStrategies).build();
     }
 
-    public Mono<Map> searchProducts(AnamneseSearchDTO search, String countryCode, UUID userId) { //montagem da url
+    public Mono<Map> searchProducts(AnamneseSearchDTO search, String countryCode, UUID userId, UiFilterDto uiFilter) { //montagem da url
         String query = search.getQuery();
         boolean isBarcode = query != null && query.matches("\\d+"); //regex verifica se a string é apenas numerica
 
