@@ -33,6 +33,7 @@ Essa é a instância do BackEnd para o aplicativo Mobile **Come-come**, focado n
 | **Open Food Facts** | [`http://localhost:8083/openfoodfacts`](http://localhost:8083/openfoodfacts) | Integração com API pública de informações nutricionais |
 | **Cadastro/Login** | [`http://localhost:8083/cadastro`](http://localhost:8083/cadastro) | CRUD de usuários e autenticação |
 | **Anamnese** | [`http://localhost:8083/anamnese`](http://localhost:8083/anamnese) | Gestão de anamnese (dados de saúde e histórico) |
+| **Anamnese** | [`http://localhost:8083/historico`](http://localhost:8083/historico) | Gestão do histórico do usuário (histórico de pesquisas) |
 
 ---
 

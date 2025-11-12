@@ -5,6 +5,9 @@
 **/*.iws
 **/*.ipr
 
+# IDE JetBrains
+**/.vscode/
+
 # Build/output
 **/out/
 **/build/
