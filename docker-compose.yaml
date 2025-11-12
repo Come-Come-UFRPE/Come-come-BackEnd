@@ -184,6 +184,48 @@ services:
     networks:
       - nt-general-come-come
 
+  postgres-historico:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=ms-historico'
+      - 'POSTGRES_PASSWORD=boilerplate'
+      - 'POSTGRES_USER=postgres'
+      - 'POSTGRES_HOST_AUTH_METHOD=md5'
+    ports:
+      - '5437:5432'
+    networks:
+      - nt-general-come-come
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ms-historico:
+    build: ./Historico-come-come-main/.
+    ports:
+      - '8085:8085'
+    environment:
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-historico:5432/ms-historico'
+      - 'SPRING_DATASOURCE_USERNAME=postgres'
+      - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
+      - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
+      - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
+      - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
+      - 'SERVER_PORT=8085'
+      - 'SPRING_APPLICATION_NAME=HISTORICO'
+    depends_on:
+      eureka-server:
+        condition: service_started
+      postgres-historico:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      ms-off:
+        condition: service_started
+    networks:
+      - nt-general-come-come
+
 volumes:
   rabbitmq_data:
 

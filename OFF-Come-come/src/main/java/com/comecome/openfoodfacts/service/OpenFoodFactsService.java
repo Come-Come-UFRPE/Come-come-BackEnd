@@ -1,18 +1,20 @@
 package com.comecome.openfoodfacts.service;
 
+import com.comecome.openfoodfacts.dtos.AnamnesePatchDto;
+import com.comecome.openfoodfacts.dtos.AnamneseSearchDTO;
+import com.comecome.openfoodfacts.dtos.responseDtos.*;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriBuilder;
 
-import com.comecome.openfoodfacts.dtos.responseDtos.IngredientDto;
-import com.comecome.openfoodfacts.dtos.responseDtos.NutrientLevelsDto;
-import com.comecome.openfoodfacts.dtos.responseDtos.ProductDetailsDto;
-import com.comecome.openfoodfacts.dtos.responseDtos.ProductResponseDto;
-
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,9 +25,12 @@ public class OpenFoodFactsService {
 
     private static final String BASE_URL = "https://world.openfoodfacts.org/cgi/search.pl"; //url base texto
     private static final String CODE_URL = "https://world.openfoodfacts.org/api/v2/product/"; //url barcode
+    private static final String historico = "fila-historico";
+
 
     private final WebClient webClient;
     private final WebClient web2;
+
 
     @Autowired
     private AllergenTranslationService allergenTranslationService;
@@ -33,8 +38,17 @@ public class OpenFoodFactsService {
     @Autowired
     private IngredientTranslationService ingredientTranslationService;
 
+    @Autowired
+    private FilteringResponseService filteringResponseService;
 
-    public OpenFoodFactsService(WebClient.Builder webClientBuilder) {
+    @Autowired
+    private GetAnamneseService getAnamneseService;
+
+    private final RabbitTemplate rabbitTemplate;
+
+
+    public OpenFoodFactsService(WebClient.Builder webClientBuilder, RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
 
         ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
                 .codecs(configurer ->
@@ -50,8 +64,8 @@ public class OpenFoodFactsService {
                 .exchangeStrategies(exchangeStrategies).build();
     }
 
-    public Mono<Map> searchProducts(String query, String countryCode) { //montagem da url
-
+    public Mono<Map> searchProducts(AnamneseSearchDTO search, String countryCode, UUID userId) { //montagem da url
+        String query = search.getQuery();
         boolean isBarcode = query != null && query.matches("\\d+"); //regex verifica se a string é apenas numerica
 
         if (!isBarcode) {
@@ -63,7 +77,7 @@ public class OpenFoodFactsService {
                             .queryParam("search_simple", "1")
                             .queryParam("action", "process")
                             .queryParam("json", "1")
-                            .queryParam("fields", "nutrient_levels,ingredients,nutriments,nutrition_grade_fr,allergens,image_front_url,product_name"); //limita só as coisas interessantes para nós
+                            .queryParam("fields", "nutrient_levels,ingredients,nutriments,nutrition_grade_fr,allergens,image_front_url,product_name,ingredients_analysis_tags"); //limita só as coisas interessantes para nós
 
                     // Adiciona filtro de país apenas se fornecido
                     if (countryCode != null && !countryCode.trim().isEmpty()) {
@@ -74,7 +88,7 @@ public class OpenFoodFactsService {
                 })
                 .retrieve()
                 .bodyToMono(Map.class)
-                .map(this::translateAllergen)
+                // .map(this::translateAllergen)
                 .map(apiResponse -> {
                     if (apiResponse == null || !apiResponse.containsKey("products")) {
                         return apiResponse;
@@ -83,11 +97,35 @@ public class OpenFoodFactsService {
                     List<Map<String, Object>> produtos = (List<Map<String, Object>>) apiResponse.get("products");
 
                     List<ProductResponseDto> produtosDto = produtos.stream()
-                            .map(this::toProductResponseDto)
+                            // Filtra os produtos
+                            .filter(produto ->
+                                    produto.containsKey("ingredients") && // 1. Garante que a chave 'ingredients' existe
+                                            produto.get("ingredients") != null && // 2. Garante que o valor da chave não é nulo
+                                            !((List<?>) produto.get("ingredients")).isEmpty() // 3. (Opcional) Garante que a lista não é vazia
+                            )
+                            // Mapeia apenas os produtos que passaram pelo filtro
+                            .map(produtoRaw -> this.toProductResponseDto(produtoRaw, List.of()))
                             .toList();
 
+                    AnamneseResponseDTO response = new AnamneseResponseDTO(search.getUserID() ,search.getQuery(), LocalDateTime.now());
+
+                    rabbitTemplate.convertAndSend(historico, response);
+
                     return Map.of("products", produtosDto);
-                });}
+                })
+                .flatMap(mapOfProducts -> {
+
+                    Mono<AnamnesePatchDto> anamneseMono = getAnamneseService.getAnamneseById(userId);
+
+                    return anamneseMono
+                            .defaultIfEmpty(new AnamnesePatchDto(null, Set.of(), Set.of(), Set.of()))
+                            .map(anamneseDto -> {
+                        // 'anamneseDto' é o DTO real "desembrulhado"
+
+                        return filteringResponseService.filteringResponse(mapOfProducts, anamneseDto);
+                    });
+                }).map(this::translateProducts);
+}
         else{
 
             return web2.get() //busca por barcode
@@ -97,6 +135,56 @@ public class OpenFoodFactsService {
 
         }
     }
+
+    private Map<String, List<ProductResponseDto>> translateProducts(Map<String, List<ProductResponseDto>> apiResponse) {
+        if (apiResponse == null || !apiResponse.containsKey("products")) {
+            return apiResponse;
+        }
+
+        List<ProductResponseDto> produtos = apiResponse.get("products").stream()
+                .map(produto -> {
+                    ProductDetailsDto details = produto.details();
+
+                    // Traduz alérgenos
+                    List<String> translatedAllergens = details.allergens() != null
+                            ? allergenTranslationService.translateAllergen(String.join(",", details.allergens()))
+                            : null;
+
+                    // Traduz ingredientes
+                    List<IngredientDto> translatedIngredients = details.ingredients() != null
+                            ? details.ingredients().stream()
+                                .map(ing -> new IngredientDto(
+                                        ing.id(),
+                                        ing.percent_estimate(),
+                                        ingredientTranslationService.translate(ing.text()),
+                                        ing.vegan(),
+                                        ing.vegetarian(),
+                                        ing.ingredients()
+                                ))
+                                .toList()
+                            : null;
+
+                    ProductDetailsDto newDetails = new ProductDetailsDto(
+                            translatedAllergens,
+                            translatedIngredients,
+                            details.nutrient_levels(),
+                            details.nutriments(),
+                            details.ingredient_tags(),
+                            details.nutrition_grade_fr()
+                    );
+
+                    return new ProductResponseDto(
+                            produto.name(),
+                            produto.image(),
+                            newDetails,
+                            produto.violations()
+                    );
+                })
+                .toList();
+
+        return Map.of("products", produtos);
+    }
+
 
     //* Método utilitário para traduzir alérgenos em uma resposta da API
     private Map translateAllergen(Map apiResponse) {
@@ -145,7 +233,7 @@ public class OpenFoodFactsService {
 
 
 
-    private ProductResponseDto toProductResponseDto(Map<String, Object> produto) {
+    private ProductResponseDto toProductResponseDto(Map<String, Object> produto, List<String> initialViolations) {
         String name = (String) produto.getOrDefault("product_name", "Sem nome");
         String image = (String) produto.get("image_front_url");
 
@@ -175,16 +263,34 @@ public class OpenFoodFactsService {
         Map<String, Object> nutriments = nutrimentsRaw != null ? new HashMap<String, Object>(nutrimentsRaw) : null;
 
         List<String> allergens = null;
-        if (produto.get("allergens") instanceof List<?>) {
-            allergens = ((List<?>) produto.get("allergens"))
+        Object allergensRaw = produto.get("allergens");
+        if (allergensRaw instanceof String allergensStr) {
+            // "en:milk,en:nuts"
+            allergens = List.of(allergensStr.split(","));
+        } else if (allergensRaw instanceof List<?>) {
+            allergens = ((List<?>) allergensRaw)
                 .stream()
                 .map(Object::toString)
                 .toList();
         }
+
+
+        //Ingredients tags
+        Object rawIngredientTag = produto.get("ingredients_analysis_tags");
+        List<String> ingredientAnalysisTags = null;
+
+        if (rawIngredientTag instanceof List<?>) {
+            // Agora faz o cast para Lista e mapeia os elementos para String
+            ingredientAnalysisTags = ((List<?>) rawIngredientTag)
+                    .stream()
+                    .map(Object::toString)
+                    .toList();
+        }
+
         String nutritionGrade = (String) produto.get("nutrition_grade_fr");
 
-        ProductDetailsDto details = new ProductDetailsDto(allergens, ingredients, nutrientLevels, nutriments, nutritionGrade);
-        return new ProductResponseDto(name, image, details);
+        ProductDetailsDto details = new ProductDetailsDto(allergens, ingredients, nutrientLevels, nutriments, ingredientAnalysisTags, nutritionGrade);
+        return new ProductResponseDto(name, image, details,initialViolations);
     }
 
 
