@@ -25,12 +25,6 @@ jobs:
           run: docker login -u ${{secrets.DOCKER_USERNAME}} -p ${{secrets.DOCKER_PASSWORD}}
         
         - name: Build and Push Docker Image Cadastro
-          if: |
-            github.event_name == 'workflow_dispatch' ||
-            contains(github.event.head_commit.message, '[build-all]') ||
-            (github.event_name == 'push' && 
-            (contains(join(github.event.commits.*.modified), 'Cadastro-Come-come/') || 
-            contains(join(github.event.commits.*.added), 'Cadastro-Come-come/')))
           run: |
             docker build -t come-come/ms-cadastro:latest -f Cadastro-Come-come/Dockerfile .
             docker push come-come/ms-cadastro:latest
