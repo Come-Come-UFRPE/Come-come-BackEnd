@@ -2,8 +2,7 @@ name: Deploy application "Come-Come" to Production
 
 on:
   push:
-    branches:
-      - dev
+    branches: [dev, feature/workflow]
 
 jobs:
   build:
