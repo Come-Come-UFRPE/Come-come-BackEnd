@@ -24,7 +24,7 @@ public class UiFilterService {
         List<ProductResponseDto> produtos = (List<ProductResponseDto>) map.get("products");
 
         // UiFilterService.java
-        List<ProductResponseDto> filtradosEAnatados = produtos.stream()
+        List<ProductResponseDto> filtradosEAnatados = produtos.parallelStream()
             .map(produto -> {
                 if (!passaNosFiltros(produto, filters)) return null;
 
