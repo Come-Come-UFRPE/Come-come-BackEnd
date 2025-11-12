@@ -69,72 +69,69 @@ public class OpenFoodFactsService {
         String query = search.getQuery();
         boolean isBarcode = query != null && query.matches("\\d+"); //regex verifica se a string é apenas numerica
 
-        if (!isBarcode) {
-
-        return webClient.get()
-                .uri(uriBuilder -> {
-                    UriBuilder builder = uriBuilder
-                            .queryParam("search_terms", query)
-                            .queryParam("search_simple", "1")
-                            .queryParam("action", "process")
-                            .queryParam("json", "1")
-                            .queryParam("fields", "nutrient_levels,ingredients,nutriments,nutrition_grade_fr,allergens,image_front_url,product_name,ingredients_analysis_tags"); //limita só as coisas interessantes para nós
-
-                    // Adiciona filtro de país apenas se fornecido
-                    if (countryCode != null && !countryCode.trim().isEmpty()) {
-                        builder.queryParam("countries_tags", countryCode);
-                    }
-
-                    return builder.build();
-                })
-                .retrieve()
-                .bodyToMono(Map.class)
-                // .map(this::translateAllergen)
-                .map(apiResponse -> {
-                    if (apiResponse == null || !apiResponse.containsKey("products")) {
-                        return apiResponse;
-                    }
-
-                    List<Map<String, Object>> produtos = (List<Map<String, Object>>) apiResponse.get("products");
-
-                    List<ProductResponseDto> produtosDto = produtos.stream()
-                            // Filtra os produtos
-                            .filter(produto ->
-                                    produto.containsKey("ingredients") && // 1. Garante que a chave 'ingredients' existe
-                                            produto.get("ingredients") != null && // 2. Garante que o valor da chave não é nulo
-                                            !((List<?>) produto.get("ingredients")).isEmpty() // 3. (Opcional) Garante que a lista não é vazia
-                            )
-                            // Mapeia apenas os produtos que passaram pelo filtro
-                            .map(produtoRaw -> this.toProductResponseDto(produtoRaw, List.of()))
-                            .toList();
-
-                    AnamneseResponseDTO response = new AnamneseResponseDTO(search.getUserID() ,search.getQuery(), LocalDateTime.now());
-
-                    rabbitTemplate.convertAndSend(historico, response);
-
-                    return Map.of("products", produtosDto);
-                })
-                .flatMap(mapOfProducts -> {
-
-                    Mono<AnamnesePatchDto> anamneseMono = getAnamneseService.getAnamneseById(userId);
-
-                    return anamneseMono
-                            .defaultIfEmpty(new AnamnesePatchDto(null, Set.of(), Set.of(), Set.of()))
-                            .map(anamneseDto -> {
-                        // 'anamneseDto' é o DTO real "desembrulhado"
-
-                        return filteringResponseService.filteringResponse(mapOfProducts, anamneseDto);
-                    });
-                }).map(this::translateProducts);
-}
-        else{
-
+        if (isBarcode) {
             return web2.get() //busca por barcode
-                    .uri(query + ".json")
-                    .retrieve()
-                    .bodyToMono(Map.class);
-
+                            .uri(query + ".json")
+                            .retrieve()
+                            .bodyToMono(Map.class);
         }
+        
+        return webClient.get()
+            .uri(uriBuilder -> {
+                UriBuilder builder = uriBuilder
+                        .queryParam("search_terms", query)
+                        .queryParam("search_simple", "1")
+                        .queryParam("action", "process")
+                        .queryParam("json", "1")
+                        .queryParam("fields", "nutrient_levels,ingredients,nutriments,nutrition_grade_fr,allergens,image_front_url,product_name,ingredients_analysis_tags"); //limita só as coisas interessantes para nós
+
+                // Adiciona filtro de país apenas se fornecido
+                if (countryCode != null && !countryCode.trim().isEmpty()) {
+                    builder.queryParam("countries_tags", countryCode);
+                }
+
+                return builder.build();
+            })
+            .retrieve()
+            .bodyToMono(Map.class)
+            // .map(this::translateAllergen)
+            .map(apiResponse -> {
+                if (apiResponse == null || !apiResponse.containsKey("products")) {
+                    return apiResponse;
+                }
+
+                List<Map<String, Object>> produtos = (List<Map<String, Object>>) apiResponse.get("products");
+
+                List<ProductResponseDto> produtosDto = produtos.stream()
+                        // Filtra os produtos
+                        .filter(produto ->
+                                produto.containsKey("ingredients") && // 1. Garante que a chave 'ingredients' existe
+                                        produto.get("ingredients") != null && // 2. Garante que o valor da chave não é nulo
+                                        !((List<?>) produto.get("ingredients")).isEmpty() // 3. (Opcional) Garante que a lista não é vazia
+                        )
+                        // Mapeia apenas os produtos que passaram pelo filtro
+                        .map(produtoRaw -> this.toProductResponseDto(produtoRaw, List.of()))
+                        .toList();
+
+                AnamneseResponseDTO response = new AnamneseResponseDTO(search.getUserID() ,search.getQuery(), LocalDateTime.now());
+
+                rabbitTemplate.convertAndSend(historico, response);
+
+                return Map.of("products", produtosDto);
+            })
+            .flatMap(mapOfProducts -> {
+
+                Mono<AnamnesePatchDto> anamneseMono = getAnamneseService.getAnamneseById(userId);
+
+                return anamneseMono
+                        .defaultIfEmpty(new AnamnesePatchDto(null, Set.of(), Set.of(), Set.of()))
+                        .map(anamneseDto -> {
+                    // 'anamneseDto' é o DTO real "desembrulhado"
+
+                    return filteringResponseService.filteringResponse(mapOfProducts, anamneseDto);
+                });
+            }).map(this::translateProducts);
+
     }
 
     private Map<String, List<ProductResponseDto>> translateProducts(Map<String, List<ProductResponseDto>> apiResponse) {
