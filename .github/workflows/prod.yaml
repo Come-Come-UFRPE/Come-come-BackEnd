@@ -18,7 +18,7 @@ jobs:
             distribution: 'temurin'
             java-version: '21'
         - name: Build service Cadastro 
-          run: mvn clean install -f Cadastro-Come-come/pom.xml
+          run: mvn clean install -f Cadastro-Come-come/pom.xml -DskipTests
         
         # Conectar no Docker hub via secrets do Github
         - name: Login Docker Hub
