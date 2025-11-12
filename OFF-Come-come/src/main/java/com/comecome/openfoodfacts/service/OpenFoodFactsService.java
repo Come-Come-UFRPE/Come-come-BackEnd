@@ -16,9 +16,6 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 public class OpenFoodFactsService {
@@ -44,6 +41,9 @@ public class OpenFoodFactsService {
 
     @Autowired
     private GetAnamneseService getAnamneseService;
+
+    @Autowired
+    private UiFilterService uiFilterService;
 
     private final RabbitTemplate rabbitTemplate;
 
@@ -90,11 +90,9 @@ public class OpenFoodFactsService {
                     builder.queryParam("countries_tags", countryCode);
                 }
 
-                return builder.build();
-            })
+                return builder.build();})
             .retrieve()
             .bodyToMono(Map.class)
-            // .map(this::translateAllergen)
             .map(apiResponse -> {
                 if (apiResponse == null || !apiResponse.containsKey("products")) {
                     return apiResponse;
@@ -117,20 +115,24 @@ public class OpenFoodFactsService {
 
                 rabbitTemplate.convertAndSend(historico, response);
 
-                return Map.of("products", produtosDto);
-            })
+                return Map.of("products", produtosDto);})
             .flatMap(mapOfProducts -> {
+                Mono<AnamnesePatchDto> anamneseMono = getAnamneseService.getAnamneseById(userId)
+                        .defaultIfEmpty(new AnamnesePatchDto(null, Set.of(), Set.of(), Set.of()));
 
-                Mono<AnamnesePatchDto> anamneseMono = getAnamneseService.getAnamneseById(userId);
+                return anamneseMono.map(anamneseDto -> {
+                    Map<String, Object> afterAnamnese = filteringResponseService
+                            .filteringResponse(mapOfProducts, anamneseDto);
 
-                return anamneseMono
-                        .defaultIfEmpty(new AnamnesePatchDto(null, Set.of(), Set.of(), Set.of()))
-                        .map(anamneseDto -> {
-                    // 'anamneseDto' é o DTO real "desembrulhado"
+                    Map<String, Object> afterUiFilter = uiFilterService
+                            .applyUiFilters(afterAnamnese, uiFilter);
 
-                    return filteringResponseService.filteringResponse(mapOfProducts, anamneseDto);
+                    List<ProductResponseDto> produtosDto = (List<ProductResponseDto>) afterUiFilter.get("products");
+
+                    return Map.of("products", produtosDto);
                 });
-            }).map(this::translateProducts);
+            })
+            .map(response -> translateProducts((Map<String, List<ProductResponseDto>>) response));
 
     }
 
@@ -183,29 +185,6 @@ public class OpenFoodFactsService {
         return Map.of("products", produtos);
     }
 
-
-    //* Método utilitário para traduzir alérgenos em uma resposta da API
-    private Map translateAllergen(Map apiResponse) {
-        if (apiResponse == null || !apiResponse.containsKey("products")) {
-            return apiResponse;
-        }
-
-        List<Map<String, Object>> produtos = (List<Map<String, Object>>) apiResponse.get("products");
-
-        for (Map<String, Object> produto : produtos) {
-            Object allergens = produto.get("allergens");
-
-            if (allergens instanceof String) {
-                String allergensStr = (String) allergens;
-                List<String> traduzidos = allergenTranslationService.translateAllergen(allergensStr);
-
-                // Substitui no map 
-                produto.put("allergens", traduzidos);
-            }
-        }
-
-        return apiResponse;
-    }
 
     private IngredientDto toIngredientDto(Map<String, Object> map) {
         List<Map<String, Object>> subIngredientsRaw = (List<Map<String, Object>>) map.get("ingredients");

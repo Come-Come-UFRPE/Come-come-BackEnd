@@ -1,7 +1,4 @@
-package com.comecome.openfoodfacts.dtos.responseDtos;
-
-import com.comecome.openfoodfacts.dtos.AnamneseSearchDTO;
-import com.comecome.openfoodfacts.dtos.UiFilterDto;
+package com.comecome.openfoodfacts.dtos;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
