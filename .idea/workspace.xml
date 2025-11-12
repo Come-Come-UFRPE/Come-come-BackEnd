@@ -4,39 +4,60 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="533eae67-84af-42d8-aaef-05d527bf8d86" name="Changes" comment="[add] atualizando docker-compose.yaml">
-      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_03_11_2025_19_50__Changes_.xml" beforeDir="false" />
+    <list default="true" id="533eae67-84af-42d8-aaef-05d527bf8d86" name="Changes" comment="[add] final merge">
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_02_11_2025_00_37__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_02_11_2025_00_37__Changes_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_02_11_2025_23_56_[Changes]/shelved.patch" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_02_11_2025_23_56__Changes_.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_08_11_2025_00_50__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_08_11_2025_00_50__Changes_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_08_11_2025_22_58__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_08_11_2025_22_58__Changes_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_08_11_2025_22_58__Changes_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_08_11_2025_22_58__Changes_1.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="feature/filtering_foods" />
+        <entry key="$PROJECT_DIR$" value="dev" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "UelitoWV"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;UelitoWV&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/Come-Come-UFRPE/Come-come-BackEnd.git",
-    "accountId": "09e80db7-2a09-4c8f-bcc7-005f7780f4e8"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Come-Come-UFRPE/Come-come-BackEnd.git&quot;,
+    &quot;accountId&quot;: &quot;4aa2b18a-805d-40ab-8ec7-d687991c0c3f&quot;
   }
-}]]></component>
+}</component>
   <component name="KubernetesApiPersistence">{}</component>
   <component name="KubernetesApiProvider">{
   &quot;isMigrated&quot;: true
 }</component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
   </component>
@@ -44,6 +65,9 @@
   &quot;associatedIndex&quot;: 3
 }</component>
   <component name="ProjectId" id="34pwVlQZNwRZSSmaD0gjV92YWEn" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -59,13 +83,11 @@
     &quot;Maven.cadastro [clean].executor&quot;: &quot;Run&quot;,
     &quot;Maven.cadastro [package].executor&quot;: &quot;Run&quot;,
     &quot;Maven.cadastro [wrapper:wrapper].executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
     &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
     &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
     &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;Spring Boot.AnamneseApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.ApiGatewayApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.CadastroApplication.executor&quot;: &quot;Run&quot;,
@@ -74,7 +96,7 @@
     &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Wellington Viana/Come-come/Come-come-BackEnd&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/pabol/Desktop/Come-Come&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -109,6 +131,19 @@
     </option>
   </component>
   <component name="RunManager" selected="Docker.docker-compose.yaml: Compose Deployment">
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="cadastro" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="cadastro" />
+      <option name="filePath" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name=" OFF-Come-come [wrapper:wrapper]" type="MavenRunConfiguration" factoryName="Maven">
       <MavenSettings>
         <option name="myGeneralSettings">
@@ -240,14 +275,14 @@
     <configuration name="AnamneseApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <option name="ALTERNATIVE_JRE_PATH" value="21" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
-      <module name="Come-Come-Geral" />
+      <module name="anamnese" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.comecome.anamnese.AnamneseApplication" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
     <configuration name="ApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
-      <module name="Come-Come-Geral" />
+      <module name="api-gateway" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.comecome.api_gateway.ApiGatewayApplication" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -263,6 +298,13 @@
     <configuration name="EurekaServerApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="eureka-server" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.eureka.eureka_server.EurekaServerApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="HistoricoComeComeApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="historicocomecome" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.historico_Come_Come.HistoricoComeComeApplication" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -292,6 +334,7 @@
       <item itemvalue="Docker.docker-compose.yaml: Compose Deployment" />
       <item itemvalue="Maven. OFF-Come-come [wrapper:wrapper]" />
       <item itemvalue="Maven.cadastro [wrapper:wrapper]" />
+      <item itemvalue="Spring Boot.HistoricoComeComeApplication" />
       <item itemvalue="Spring Boot.AnamneseApplication" />
       <item itemvalue="Spring Boot.ApiGatewayApplication" />
       <item itemvalue="Spring Boot.CadastroApplication" />
@@ -311,8 +354,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26094.121" />
-        <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-IU-251.26094.121" />
+        <option value="bundled-jdk-9f38398b9061-39b83d9b5494-intellij.indexing.shared.core-IU-241.18034.62" />
+        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-IU-241.18034.62" />
       </set>
     </attachedChunks>
   </component>
@@ -343,9 +386,9 @@
       <workItem from="1762213320265" duration="11000" />
       <workItem from="1762213338021" duration="41000" />
       <workItem from="1762213391987" duration="3817000" />
-      <workItem from="1762451182556" duration="206000" />
-      <workItem from="1762793818876" duration="537000" />
-      <workItem from="1762968399241" duration="386000" />
+      <workItem from="1762574051971" duration="184000" />
+      <workItem from="1762899985105" duration="1649000" />
+      <workItem from="1762903148609" duration="296000" />
     </task>
     <task id="LOCAL-00001" summary="[fix] docker compose novamente">
       <option name="closed" value="true" />
@@ -435,7 +478,63 @@
       <option name="project" value="LOCAL" />
       <updated>1762215835001</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="[add]">
+      <option name="closed" value="true" />
+      <created>1762900012618</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1762900012618</updated>
+    </task>
+    <task id="LOCAL-00013" summary="[add]">
+      <option name="closed" value="true" />
+      <created>1762900015729</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1762900015729</updated>
+    </task>
+    <task id="LOCAL-00014" summary="[add]">
+      <option name="closed" value="true" />
+      <created>1762900021511</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1762900021511</updated>
+    </task>
+    <task id="LOCAL-00015" summary="[add] final merge">
+      <option name="closed" value="true" />
+      <created>1762900218538</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1762900218538</updated>
+    </task>
+    <task id="LOCAL-00016" summary="[add] final merge">
+      <option name="closed" value="true" />
+      <created>1762902459932</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1762902459932</updated>
+    </task>
+    <task id="LOCAL-00017" summary="[add] final merge">
+      <option name="closed" value="true" />
+      <created>1762902501362</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1762902501362</updated>
+    </task>
+    <task id="LOCAL-00018" summary="[add] final merge">
+      <option name="closed" value="true" />
+      <created>1762902523145</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1762902523145</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -448,6 +547,8 @@
     <MESSAGE value="[commit] docker compose build" />
     <MESSAGE value="[commit] agora todos estão ativos" />
     <MESSAGE value="[add] atualizando docker-compose.yaml" />
-    <option name="LAST_COMMIT_MESSAGE" value="[add] atualizando docker-compose.yaml" />
+    <MESSAGE value="[add]" />
+    <MESSAGE value="[add] final merge" />
+    <option name="LAST_COMMIT_MESSAGE" value="[add] final merge" />
   </component>
 </project>

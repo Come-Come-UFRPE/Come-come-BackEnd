@@ -8,5 +8,6 @@ public record ProductDetailsDto(
         List<IngredientDto> ingredients,
         NutrientLevelsDto nutrient_levels,
         Map<String, Object> nutriments,
+        List<String> ingredient_tags,
         String nutrition_grade_fr
 ) {}
