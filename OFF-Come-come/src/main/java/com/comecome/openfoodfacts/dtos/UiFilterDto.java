@@ -3,16 +3,16 @@ package com.comecome.openfoodfacts.dtos;
 import java.util.*;
 
 public record UiFilterDto(
-        Set<String> selectedCategories,
-        Set<String> allergies,
-        Set<String> dietaryPreferences,
-        Map<String, String> nutritionLevels
+        Set<String> categories,
+        Set<String> allergens,
+        Set<String> diets,
+        Set<String> nutritional
 ) {
     public UiFilterDto {
-        selectedCategories = orEmpty(selectedCategories);
-        allergies = orEmpty(allergies);
-        dietaryPreferences = orEmpty(dietaryPreferences);
-        nutritionLevels = orEmptyMap(nutritionLevels);
+        categories = orEmpty(categories);
+        allergens = orEmpty(allergens);
+        diets = orEmpty(diets);
+        nutritional = orEmpty(nutritional);
     }
 
     /*

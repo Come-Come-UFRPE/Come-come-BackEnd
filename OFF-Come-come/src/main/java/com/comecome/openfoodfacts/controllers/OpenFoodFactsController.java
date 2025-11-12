@@ -1,8 +1,8 @@
 package com.comecome.openfoodfacts.controllers;
 
 import com.comecome.openfoodfacts.dtos.AnamneseSearchDTO;
+import com.comecome.openfoodfacts.dtos.FilteringDto;
 import com.comecome.openfoodfacts.dtos.UiFilterDto;
-import com.comecome.openfoodfacts.dtos.responseDtos.FilteringDto;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
