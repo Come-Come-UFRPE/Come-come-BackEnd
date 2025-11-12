@@ -26,6 +26,6 @@ jobs:
         
         - name: Build and Push Docker Image Cadastro
           run: |
-            docker build -t come-come/ms-cadastro:latest -f Cadastro-Come-come/Dockerfile .
-            docker push come-come/ms-cadastro:latest
+            docker build -t ${{secrets.DOCKER_USERNAME}}/ms-cadastro:latest -f Cadastro-Come-come/Dockerfile .
+            docker push ${{secrets.DOCKER_USERNAME}}/ms-cadastro:latest
 
