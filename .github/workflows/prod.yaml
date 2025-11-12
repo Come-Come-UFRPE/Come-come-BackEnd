@@ -32,6 +32,6 @@ jobs:
             (contains(join(github.event.commits.*.modified), 'Cadastro-Come-come/') || 
             contains(join(github.event.commits.*.added), 'Cadastro-Come-come/')))
           run: |
-            docker build -t cadastro/ms-cadastro:latest -f Cadastro-Come-come/Dockerfile .
+            docker build -t come-come/ms-cadastro:latest -f Cadastro-Come-come/Dockerfile .
             docker push come-come/ms-cadastro:latest
 
