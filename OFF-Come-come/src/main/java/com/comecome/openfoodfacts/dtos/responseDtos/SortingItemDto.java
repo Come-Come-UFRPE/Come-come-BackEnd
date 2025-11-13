@@ -2,7 +2,6 @@ package com.comecome.openfoodfacts.dtos.responseDtos;
 
 import com.comecome.openfoodfacts.enums.AdequacaoEnum;
 import com.comecome.openfoodfacts.dtos.gateway.AnamneseDto;
-import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -12,7 +11,7 @@ import java.util.Set;
 
 public class SortingItemDto {
 
-    // --- 1. O MAPA DE ALERGIAS (Como antes) ---
+    //1. O MAPA DE ALERGIAS
     private static final Map<String, List<String>> ALLERGY_TAG_MAP = new HashMap<>();
 
     static {
@@ -40,7 +39,7 @@ public class SortingItemDto {
     }
 
     // --- 2. Campos do DTO
-    @Getter
+
     private String nome;
     private AdequacaoEnum adequacao;
     private Double valorEnergetico; // energy-kcal_100g
@@ -114,6 +113,7 @@ public class SortingItemDto {
 
         // REGRA 3: CONDIÇÕES DE SAÚDE (Risco Alto/Médio)
         // Um score de risco, onde < 0 é VERDE, > 0 é AMARELO, > 10 é VERMELHO
+
         //TODO VERIFICAR VALORES
         int riskScore = 0;
 
@@ -187,6 +187,8 @@ public class SortingItemDto {
     }
 
     //Getters e setters
+
+    public String getNome() { return nome; }
 
     public void setNome(String nome) {
         this.nome = nome;
