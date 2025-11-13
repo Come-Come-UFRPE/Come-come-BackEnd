@@ -8,5 +8,7 @@ public record ProductDetailsDto(
         List<IngredientDto> ingredients,
         NutrientLevelsDto nutrient_levels,
         Map<String, Object> nutriments,
-        String nutrition_grade_fr
+        String nutrition_grade_fr,
+        String veganStatus,
+        String vegetarianStatus
 ) {}

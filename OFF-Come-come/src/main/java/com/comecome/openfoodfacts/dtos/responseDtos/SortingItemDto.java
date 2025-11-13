@@ -74,12 +74,12 @@ public class SortingItemDto {
         // 3.2. Extração de Alérgenos
         List<String> alergenosProduto = produto.details().allergens();
 
-        /*
-        //TODO
-        // 3.3. Extração de Status de Dieta
-        this.isVegan = false; // Placeholder
-        this.isVegetarian = false; // Placeholder
-*/
+
+        // Verificação de vegano
+        String status = produto.details().veganStatus();
+        if ("en:vegan".equals(status) || "en:yes".equals(status)) {
+            this.isVegan = true;
+        }
 
         // 3.4. Cálculo da Adequação
         this.adequacao = calcularAdequacao(anamnese, alergenosProduto);
@@ -98,18 +98,16 @@ public class SortingItemDto {
                 }
             }
         }
-    /*
-        //TODO
+
         // REGRA 2: DIETA (Crítico - VERMELHO)
 
         if (anamnese.temDieta("VEGANA") && !this.isVegan) {
-            // return AdequacaoEnum.VERMELHO; // Ative quando buscar o status
+            return AdequacaoEnum.VERMELHO;
         }
         if (anamnese.temDieta("VEGETARIANA") && !this.isVegetarian) {
-            // return AdequacaoEnum.VERMELHO; // Ative quando buscar o status
+            return AdequacaoEnum.VERMELHO;
         }
 
-    */
 
         // REGRA 3: CONDIÇÕES DE SAÚDE (Risco Alto/Médio)
         // Um score de risco, onde < 0 é VERDE, > 0 é AMARELO, > 10 é VERMELHO

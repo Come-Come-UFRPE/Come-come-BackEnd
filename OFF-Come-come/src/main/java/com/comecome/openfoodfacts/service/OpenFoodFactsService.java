@@ -63,8 +63,7 @@ public class OpenFoodFactsService {
                             .queryParam("search_simple", "1")
                             .queryParam("action", "process")
                             .queryParam("json", "1")
-                            .queryParam("fields", "nutrient_levels,ingredients,nutriments,nutrition_grade_fr,allergens,image_front_url,product_name"); //limita só as coisas interessantes para nós
-
+                            .queryParam("fields", "nutrient_levels,ingredients,nutriments,nutrition_grade_fr,allergens,image_front_url,product_name,vegan_status,vegetarian_status");
                     // Adiciona filtro de país apenas se fornecido
                     if (countryCode != null && !countryCode.trim().isEmpty()) {
                         builder.queryParam("countries_tags", countryCode);
@@ -183,7 +182,10 @@ public class OpenFoodFactsService {
         }
         String nutritionGrade = (String) produto.get("nutrition_grade_fr");
 
-        ProductDetailsDto details = new ProductDetailsDto(allergens, ingredients, nutrientLevels, nutriments, nutritionGrade);
+        String veganStatus = (String) produto.get("vegan_status");
+        String vegetarianStatus = (String) produto.get("vegetarian_status");
+
+        ProductDetailsDto details = new ProductDetailsDto(allergens, ingredients, nutrientLevels, nutriments, nutritionGrade, veganStatus, vegetarianStatus);
         return new ProductResponseDto(name, image, details);
     }
 
