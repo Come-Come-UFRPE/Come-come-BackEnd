@@ -1,5 +1,6 @@
 package com.comecome.anamnese.infra;
 
+import com.comecome.anamnese.exceptions.AnamneseAlreadyRegisteredException;
 import com.comecome.anamnese.exceptions.AnamneseNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,5 +15,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     private ResponseEntity<RestErrorMessage> AnamneseNotFoundHandler(AnamneseNotFoundException anamneseNotFoundException){
         RestErrorMessage error = new RestErrorMessage(HttpStatus.NOT_FOUND,anamneseNotFoundException.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(AnamneseAlreadyRegisteredException.class)
+    private ResponseEntity<RestErrorMessage> AnamneseAlreadyRegisteredHandler(AnamneseAlreadyRegisteredException exception){
+        RestErrorMessage error = new RestErrorMessage(HttpStatus.CONFLICT,exception.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 }
