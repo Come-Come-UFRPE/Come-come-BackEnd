@@ -38,8 +38,12 @@ public class SortingItemDto {
         ));
     }
 
+
+
+
     // --- 2. Campos do DTO
 
+    private String id;
     private String nome;
     private AdequacaoEnum adequacao;
     private Double valorEnergetico; // energy-kcal_100g
@@ -49,6 +53,10 @@ public class SortingItemDto {
     private Double gorduraSaturada; // saturated-fat_100g
     private Double gorduraTotal; // fat_100g
     private Double ferro; // iron_100g (em mg)
+    private Double fibras;
+    private Double gordurasTrans;
+    private String nutriscore;
+    private Integer novaGroup;
 
     // Status de Dieta (precisa vir do OpenFoodFacts)
     private boolean isVegan;
@@ -70,6 +78,10 @@ public class SortingItemDto {
         this.gorduraSaturada = extrairNutriente(nutriments, "saturated-fat_100g");
         this.gorduraTotal = extrairNutriente(nutriments, "fat_100g");
         this.ferro = extrairNutriente(nutriments, "iron_100g");
+        this.fibras = extrairNutriente(nutriments, "fiber_100g");
+        this.gordurasTrans = extrairNutriente(nutriments, "trans-fat_100g");
+        this.nutriscore = produto.details().nutriscoreGrade();
+        this.novaGroup = produto.details().novaGroup();
 
         // 3.2. Extração de Alérgenos
         List<String> alergenosProduto = produto.details().allergens();
@@ -185,6 +197,8 @@ public class SortingItemDto {
     }
 
     //Getters e setters
+
+    public String getId() { return id; }
 
     public String getNome() { return nome; }
 

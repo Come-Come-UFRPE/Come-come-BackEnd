@@ -10,5 +10,7 @@ public record ProductDetailsDto(
         Map<String, Object> nutriments,
         String nutrition_grade_fr,
         String veganStatus,
-        String vegetarianStatus
+        String vegetarianStatus,
+        String nutriscoreGrade,
+        Integer novaGroup
 ) {}

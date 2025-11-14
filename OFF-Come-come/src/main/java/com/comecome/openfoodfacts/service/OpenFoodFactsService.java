@@ -63,7 +63,7 @@ public class OpenFoodFactsService {
                             .queryParam("search_simple", "1")
                             .queryParam("action", "process")
                             .queryParam("json", "1")
-                            .queryParam("fields", "nutrient_levels,ingredients,nutriments,nutrition_grade_fr,allergens,image_front_url,product_name,vegan_status,vegetarian_status");
+                            .queryParam("fields", "nutrient_levels,ingredients,nutriments,nutrition_grade_fr,allergens,image_front_url,product_name,vegan_status,vegetarian_status, ,_id,nutriscore_grade,nova_group,trans-fat_100g,fiber_100g");
                     // Adiciona filtro de país apenas se fornecido
                     if (countryCode != null && !countryCode.trim().isEmpty()) {
                         builder.queryParam("countries_tags", countryCode);
@@ -147,6 +147,7 @@ public class OpenFoodFactsService {
     private ProductResponseDto toProductResponseDto(Map<String, Object> produto) {
         String name = (String) produto.getOrDefault("product_name", "Sem nome");
         String image = (String) produto.get("image_front_url");
+        String id = (String) produto.get("_id");
 
         // Ingredientes
         List<Map<String, Object>> ingredientsRaw = (List<Map<String, Object>>) produto.get("ingredients");
@@ -181,12 +182,13 @@ public class OpenFoodFactsService {
                 .toList();
         }
         String nutritionGrade = (String) produto.get("nutrition_grade_fr");
-
+        String nutriscoreGrade = (String) produto.get("nutriscore_grade");
+        Integer novaGroup = (Integer) produto.get("nova_group");
         String veganStatus = (String) produto.get("vegan_status");
         String vegetarianStatus = (String) produto.get("vegetarian_status");
 
-        ProductDetailsDto details = new ProductDetailsDto(allergens, ingredients, nutrientLevels, nutriments, nutritionGrade, veganStatus, vegetarianStatus);
-        return new ProductResponseDto(name, image, details);
+        ProductDetailsDto details = new ProductDetailsDto(allergens, ingredients, nutrientLevels, nutriments, nutritionGrade, veganStatus, vegetarianStatus,novaGroup, nutriscoreGrade);
+        return new ProductResponseDto(id, name, image, details);
     }
 
 
