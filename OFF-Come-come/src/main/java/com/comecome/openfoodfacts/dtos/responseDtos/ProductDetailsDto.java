@@ -6,11 +6,10 @@ import java.util.Map;
 public record ProductDetailsDto(
         List<String> allergens,
         List<IngredientDto> ingredients,
-        NutrientLevelsDto nutrient_levels,
+        NutrientLevelsDto nutrientLevels,
         Map<String, Object> nutriments,
-        String nutrition_grade_fr,
+        String nutritionGrade,
         String veganStatus,
         String vegetarianStatus,
-        String nutriscoreGrade,
         Integer novaGroup
 ) {}

@@ -56,38 +56,38 @@ public class OpenFoodFactsService {
 
         if (!isBarcode) {
 
-        return webClient.get()
-                .uri(uriBuilder -> {
-                    UriBuilder builder = uriBuilder
-                            .queryParam("search_terms", query)
-                            .queryParam("search_simple", "1")
-                            .queryParam("action", "process")
-                            .queryParam("json", "1")
-                            .queryParam("fields", "nutrient_levels,ingredients,nutriments,nutrition_grade_fr,allergens,image_front_url,product_name,vegan_status,vegetarian_status, ,_id,nutriscore_grade,nova_group,trans-fat_100g,fiber_100g");
-                    // Adiciona filtro de país apenas se fornecido
-                    if (countryCode != null && !countryCode.trim().isEmpty()) {
-                        builder.queryParam("countries_tags", countryCode);
-                    }
+            return webClient.get()
+                    .uri(uriBuilder -> {
+                        UriBuilder builder = uriBuilder
+                                .queryParam("search_terms", query)
+                                .queryParam("search_simple", "1")
+                                .queryParam("action", "process")
+                                .queryParam("json", "1")
+                                .queryParam("fields", "nutrient_levels,ingredients,nutriments,nutrition_grade_fr,allergens,image_front_url,product_name,vegan_status,vegetarian_status, ,_id,nutriscore_grade,nova_group,trans-fat_100g,fiber_100g");
+                        // Adiciona filtro de país apenas se fornecido
+                        if (countryCode != null && !countryCode.trim().isEmpty()) {
+                            builder.queryParam("countries_tags", countryCode);
+                        }
 
-                    return builder.build();
-                })
-                .retrieve()
-                .bodyToMono(Map.class)
-                .map(this::translateAllergen)
-                .map(apiResponse -> {
-                    if (apiResponse == null || !apiResponse.containsKey("products")) {
-                        return apiResponse;
-                    }
+                        return builder.build();
+                    })
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .map(this::translateAllergen)
+                    .map(apiResponse -> {
+                        if (apiResponse == null || !apiResponse.containsKey("products")) {
+                            return apiResponse;
+                        }
 
-                    List<Map<String, Object>> produtos = (List<Map<String, Object>>) apiResponse.get("products");
+                        List<Map<String, Object>> produtos = (List<Map<String, Object>>) apiResponse.get("products");
 
-                    List<ProductResponseDto> produtosDto = produtos.stream()
-                            .map(this::toProductResponseDto)
-                            .toList();
+                        List<ProductResponseDto> produtosDto = produtos.stream()
+                                .map(this::toProductResponseDto)
+                                .toList();
 
-                    return Map.of("products", produtosDto);
-                });}
-        else{
+                        return Map.of("products", produtosDto);
+                    });
+        } else {
 
             return web2.get() //busca por barcode
                     .uri(query + ".json")
@@ -143,7 +143,6 @@ public class OpenFoodFactsService {
     }
 
 
-
     private ProductResponseDto toProductResponseDto(Map<String, Object> produto) {
         String name = (String) produto.getOrDefault("product_name", "Sem nome");
         String image = (String) produto.get("image_front_url");
@@ -177,9 +176,9 @@ public class OpenFoodFactsService {
         List<String> allergens = null;
         if (produto.get("allergens") instanceof List<?>) {
             allergens = ((List<?>) produto.get("allergens"))
-                .stream()
-                .map(Object::toString)
-                .toList();
+                    .stream()
+                    .map(Object::toString)
+                    .toList();
         }
         String nutritionGrade = (String) produto.get("nutrition_grade_fr");
         String nutriscoreGrade = (String) produto.get("nutriscore_grade");
@@ -187,9 +186,10 @@ public class OpenFoodFactsService {
         String veganStatus = (String) produto.get("vegan_status");
         String vegetarianStatus = (String) produto.get("vegetarian_status");
 
-        ProductDetailsDto details = new ProductDetailsDto(allergens, ingredients, nutrientLevels, nutriments, nutritionGrade, veganStatus, vegetarianStatus,novaGroup, nutriscoreGrade);
+        ProductDetailsDto details = new ProductDetailsDto(
+                allergens, ingredients, nutrientLevels, nutriments,
+                nutritionGrade, veganStatus, vegetarianStatus, novaGroup
+        );
         return new ProductResponseDto(id, name, image, details);
     }
-
-
 }
