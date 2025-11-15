@@ -429,7 +429,7 @@ public class FilteringResponseService {
         final double MAX_SODIUM = 0.08;
         Double sodium = getNutrimentValue(nutriments, "sodium_100g");
 
-        if (sodium > MAX_SODIUM){
+        if (sodium == null || sodium > MAX_SODIUM){
             return false;
         }
 
@@ -443,7 +443,7 @@ public class FilteringResponseService {
         final double MAX_CARBS = 5.0;
         Double carbs = getNutrimentValue(nutriments, "carbohydrates_100g");
 
-        if (carbs > MAX_CARBS){
+        if (carbs == null ||carbs > MAX_CARBS){
             return false;
         }
 
@@ -462,7 +462,7 @@ public class FilteringResponseService {
         final double MAX_SODIUM = 0.08;
         Double sodium = getNutrimentValue(nutriments, "sodium_100g");
 
-        if (sodium > MAX_SODIUM){
+        if (sodium == null || sodium > MAX_SODIUM){
             return false;
         }
 
