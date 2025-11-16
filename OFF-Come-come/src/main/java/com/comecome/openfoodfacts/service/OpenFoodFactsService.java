@@ -3,8 +3,10 @@ package com.comecome.openfoodfacts.service;
 import com.comecome.openfoodfacts.dtos.AnamnesePatchDto;
 import com.comecome.openfoodfacts.dtos.AnamneseSearchDTO;
 import com.comecome.openfoodfacts.dtos.responseDtos.*;
+import com.comecome.openfoodfacts.exceptions.FoodNotFoundException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -12,6 +14,7 @@ import org.springframework.web.util.UriBuilder;
 
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.HashMap;
@@ -65,79 +68,110 @@ public class OpenFoodFactsService {
                 .exchangeStrategies(exchangeStrategies).build();
     }
 
-    public Mono<Map> searchProducts(AnamneseSearchDTO search, String countryCode, UUID userId) { //montagem da url
+    public Mono<Map> searchProducts(
+            AnamneseSearchDTO search,
+            String countryCode,
+            UUID userId) {
+
         String query = search.getQuery();
-        boolean isBarcode = query != null && query.matches("\\d+"); //regex verifica se a string é apenas numerica
+        boolean isBarcode = query != null && query.matches("\\d+");
+        WebClient client = isBarcode ? web2 : webClient;
 
-        //Dependendo se é barcode ou não, utiliza a mesma lógica de busca
-        if (!isBarcode) {
-            return SearchLogic(webClient, countryCode, search);
-
-        } else {
-            return SearchLogic(web2, countryCode, search);
-        }
+        return client.get()
+                .uri(uriBuilder -> buildUri(uriBuilder, query, countryCode, isBarcode))
+                .retrieve()
+                .onStatus(
+                        status -> status.value() == 404,
+                        response -> Mono.error(new FoodNotFoundException("Produto não encontrado: " + query))
+                )
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .map(apiResponse -> extractProducts(apiResponse, isBarcode))
+                .flatMap(products -> {
+                    if (products.get("products").isEmpty()) {
+                        return Mono.error(new FoodNotFoundException("Nenhum produto encontrado para: " + query));
+                    }
+                    return Mono.just(products);
+                })
+                .doOnNext(products -> {
+                    if (!isBarcode) {
+                        sendToRabbit(search);
+                    }
+                })
+                .flatMap(products -> applyAnamneseFilter(products, search.getUserID()))
+                .map(products -> (Map<String, List<ProductResponseDto>>) translateProducts(products));
     }
 
+    private URI buildUri(UriBuilder uriBuilder, String query, String countryCode, boolean isBarcode) {
+        UriBuilder builder = isBarcode
+                ? uriBuilder.path(query + ".json")
+                : uriBuilder
+                .queryParam("search_terms", query)
+                .queryParam("search_simple", "1")
+                .queryParam("action", "process")
+                .queryParam("json", "1");
 
-    public Mono<Map> SearchLogic(WebClient web, String countryCode, AnamneseSearchDTO search) {
+        builder.queryParam("fields", "nutrient_levels,ingredients,nutriments,nutrition_grade_fr,allergens,image_front_url,product_name,ingredients_analysis_tags");
 
-        String query = search.getQuery();
+        if (countryCode != null && !countryCode.trim().isEmpty()) {
+            builder.queryParam("countries_tags", countryCode);
+        }
 
-        return webClient.get()
-                .uri(uriBuilder -> {
-                    UriBuilder builder = uriBuilder
-                            .queryParam("search_terms", query)
-                            .queryParam("search_simple", "1")
-                            .queryParam("action", "process")
-                            .queryParam("json", "1")
-                            .queryParam("fields", "nutrient_levels,ingredients,nutriments,nutrition_grade_fr,allergens,image_front_url,product_name,ingredients_analysis_tags"); //limita só as coisas interessantes para nós
+        return builder.build();
+    }
 
-                    // Adiciona filtro de país apenas se fornecido
-                    if (countryCode != null && !countryCode.trim().isEmpty()) {
-                        builder.queryParam("countries_tags", countryCode);
-                    }
+    private Map<String, List<ProductResponseDto>> extractProducts(Map<String, Object> apiResponse, boolean isBarcode) {
+        if (apiResponse == null) {
+            return Map.of("products", List.of());
+        }
 
-                    return builder.build();
-                })
-                .retrieve()
-                .bodyToMono(Map.class)
-                // .map(this::translateAllergen)
-                .map(apiResponse -> {
-                    if (apiResponse == null || !apiResponse.containsKey("products")) {
-                        return apiResponse;
-                    }
+        List<Map<String, Object>> rawProducts = isBarcode
+                ? extractSingleProduct(apiResponse)
+                : extractMultipleProducts(apiResponse);
 
-                    List<Map<String, Object>> produtos = (List<Map<String, Object>>) apiResponse.get("products");
+        List<ProductResponseDto> validProducts = rawProducts.stream()
+                .filter(this::hasValidIngredients)
+                .map(product -> toProductResponseDto(product, List.of()))
+                .toList();
 
-                    List<ProductResponseDto> produtosDto = produtos.stream()
-                            // Filtra os produtos
-                            .filter(produto ->
-                                    produto.containsKey("ingredients") && // 1. Garante que a chave 'ingredients' existe
-                                            produto.get("ingredients") != null && // 2. Garante que o valor da chave não é nulo
-                                            !((List<?>) produto.get("ingredients")).isEmpty() // 3. (Opcional) Garante que a lista não é vazia
-                            )
-                            // Mapeia apenas os produtos que passaram pelo filtro
-                            .map(produtoRaw -> this.toProductResponseDto(produtoRaw, List.of()))
-                            .toList();
+        return Map.of("products", validProducts);
+    }
 
-                    AnamneseResponseDTO response = new AnamneseResponseDTO(search.getUserID(), search.getQuery(), LocalDateTime.now());
+    private List<Map<String, Object>> extractSingleProduct(Map<String, Object> apiResponse) {
+        if (!apiResponse.containsKey("product")) {
+            return List.of();
+        }
+        return List.of((Map<String, Object>) apiResponse.get("product"));
+    }
 
-                    rabbitTemplate.convertAndSend(historico, response);
+    private List<Map<String, Object>> extractMultipleProducts(Map<String, Object> apiResponse) {
+        if (!apiResponse.containsKey("products")) {
+            return List.of();
+        }
+        return (List<Map<String, Object>>) apiResponse.get("products");
+    }
 
-                    return Map.of("products", produtosDto);
-                })
-                .flatMap(mapOfProducts -> {
+    private boolean hasValidIngredients(Map<String, Object> product) {
+        return product.containsKey("ingredients")
+                && product.get("ingredients") instanceof List
+                && !((List<?>) product.get("ingredients")).isEmpty();
+    }
 
-                    Mono<AnamnesePatchDto> anamneseMono = getAnamneseService.getAnamneseById(search.getUserID());
+    private void sendToRabbit(AnamneseSearchDTO search) {
+        AnamneseResponseDTO response = new AnamneseResponseDTO(
+                search.getUserID(),
+                search.getQuery(),
+                LocalDateTime.now()
+        );
+        rabbitTemplate.convertAndSend(historico, response);
+    }
 
-                    return anamneseMono
-                            .defaultIfEmpty(new AnamnesePatchDto(null, Set.of(), Set.of(), Set.of()))
-                            .map(anamneseDto -> {
-                                // 'anamneseDto' é o DTO real "desembrulhado"
+    private Mono<Map<String, List<ProductResponseDto>>> applyAnamneseFilter(
+            Map<String, List<ProductResponseDto>> products,
+            UUID userId) {
 
-                                return filteringResponseService.filteringResponse(mapOfProducts, anamneseDto);
-                            });
-                }).map(this::translateProducts);
+        return getAnamneseService.getAnamneseById(userId)
+                .defaultIfEmpty(new AnamnesePatchDto(null, Set.of(), Set.of(), Set.of()))
+                .map(anamnese -> filteringResponseService.filteringResponse(products, anamnese));
     }
 
     private Map<String, List<ProductResponseDto>> translateProducts(Map<String, List<ProductResponseDto>> apiResponse) {
