@@ -1,6 +1,9 @@
 package com.comecome.openfoodfacts.controllers;
 
 import com.comecome.openfoodfacts.dtos.AnamneseSearchDTO;
+import com.comecome.openfoodfacts.dtos.ComparePatchDTO;
+import com.comecome.openfoodfacts.dtos.responseDtos.ComparingResponseDTO;
+import com.comecome.openfoodfacts.service.ComparingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,8 +18,11 @@ public class OpenFoodFactsController {
 
     private final OpenFoodFactsService openFoodFactsService;
 
-    public OpenFoodFactsController(OpenFoodFactsService openFoodFactsService) {
+    private final ComparingService comparingService;
+
+    public OpenFoodFactsController(OpenFoodFactsService openFoodFactsService, ComparingService comparingService) {
         this.openFoodFactsService = openFoodFactsService;
+        this.comparingService = comparingService;
     }
 
     @PostMapping("/search")
@@ -24,4 +30,9 @@ public class OpenFoodFactsController {
         return openFoodFactsService.searchProducts(search, "en:brazil", search.getUserID()).map(ResponseEntity::ok);
     }
 
+    @PostMapping("/compare")
+    public Mono<ResponseEntity<ComparingResponseDTO>> compareProducts(@RequestBody ComparePatchDTO compare){
+        return comparingService.comparingResponse(compare)
+                .map(ResponseEntity::ok);
+    }
 }
