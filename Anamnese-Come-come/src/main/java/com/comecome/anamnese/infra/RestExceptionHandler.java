@@ -11,7 +11,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(AnamneseNotFoundException.class)
-    private ResponseEntity<RestErrorMessage> AnamneseNotFoundHandler(AnamneseNotFoundException anamneseNotFoundException){
+    private ResponseEntity<RestErrorMessage> anamneseNotFoundHandler(AnamneseNotFoundException anamneseNotFoundException){
         RestErrorMessage error = new RestErrorMessage(HttpStatus.NOT_FOUND,anamneseNotFoundException.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
