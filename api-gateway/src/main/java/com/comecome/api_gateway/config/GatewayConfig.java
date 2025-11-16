@@ -82,7 +82,8 @@ public class GatewayConfig { //metodo para obter o ip do usuario para o rate lim
                     .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                     .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                     .logout(ServerHttpSecurity.LogoutSpec::disable)
-                    .authorizeExchange(exchanges -> exchanges.anyExchange().permitAll());
+                    .authorizeExchange(exchanges -> exchanges.anyExchange().permitAll())
+                    .cors(ServerHttpSecurity.CorsSpec::disable);
 
             return http.build();
         }
