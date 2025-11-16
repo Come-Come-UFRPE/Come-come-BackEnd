@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 @Service
 public class FilteringResponseService {
 
-    public Map<String, List<ProductResponseDto>> filteringResponse(
+    public Map<String, Object> filteringResponse(
             Map<String, List<ProductResponseDto>> rawResponse, // <-- 2. O parâmetro é Map (não Mono)
             AnamnesePatchDto anamnesePatchDto) {
 

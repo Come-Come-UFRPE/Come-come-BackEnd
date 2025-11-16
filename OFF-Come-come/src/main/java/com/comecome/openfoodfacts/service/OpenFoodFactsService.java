@@ -2,6 +2,7 @@ package com.comecome.openfoodfacts.service;
 
 import com.comecome.openfoodfacts.dtos.AnamnesePatchDto;
 import com.comecome.openfoodfacts.dtos.AnamneseSearchDTO;
+import com.comecome.openfoodfacts.dtos.UiFilterDto;
 import com.comecome.openfoodfacts.dtos.responseDtos.*;
 import com.comecome.openfoodfacts.exceptions.FoodNotFoundException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -46,9 +47,11 @@ public class OpenFoodFactsService {
     @Autowired
     private GetAnamneseService getAnamneseService;
 
-    private final RabbitTemplate rabbitTemplate;
     @Autowired
-    private FuzzySearchService fuzzySearchService;
+    private UiFilterService uiFilterService;
+
+    private final RabbitTemplate rabbitTemplate;
+
 
 
     public OpenFoodFactsService(WebClient.Builder webClientBuilder, RabbitTemplate rabbitTemplate) {
@@ -71,7 +74,7 @@ public class OpenFoodFactsService {
     public Mono<Map> searchProducts(
             AnamneseSearchDTO search,
             String countryCode,
-            UUID userId) {
+            UUID userId, UiFilterDto uiFilter) {
 
         String query = search.getQuery();
         boolean isBarcode = query != null && query.matches("\\d+");
@@ -97,7 +100,7 @@ public class OpenFoodFactsService {
                         sendToRabbit(search);
                     }
                 })
-                .flatMap(products -> applyAnamneseFilter(products, search.getUserID()))
+                .flatMap(products -> applyFilters(products, search.getUserID(), uiFilter))
                 .map(products -> (Map<String, List<ProductResponseDto>>) translateProducts(products));
     }
 
@@ -165,13 +168,28 @@ public class OpenFoodFactsService {
         rabbitTemplate.convertAndSend(historico, response);
     }
 
-    private Mono<Map<String, List<ProductResponseDto>>> applyAnamneseFilter(
+    private Mono<Map<String, List<ProductResponseDto>>> applyFilters(
             Map<String, List<ProductResponseDto>> products,
-            UUID userId) {
+            UUID userId,
+            UiFilterDto uiFilter) {
+
+        // Converte para Map<String, Object> que os services esperam
+        Map<String, List<ProductResponseDto>> productsAsObject = new HashMap<>(products);
 
         return getAnamneseService.getAnamneseById(userId)
                 .defaultIfEmpty(new AnamnesePatchDto(null, Set.of(), Set.of(), Set.of()))
-                .map(anamnese -> filteringResponseService.filteringResponse(products, anamnese));
+                .map(anamnese -> {
+                    Map<String, Object> afterAnamnese = filteringResponseService
+                            .filteringResponse(productsAsObject, anamnese);
+
+                    Map<String, Object> afterUiFilter = uiFilterService
+                            .applyUiFilters(afterAnamnese, uiFilter);
+
+                    List<ProductResponseDto> filteredProducts =
+                            (List<ProductResponseDto>) afterUiFilter.get("products");
+
+                    return Map.of("products", filteredProducts);
+                });
     }
 
     private Map<String, List<ProductResponseDto>> translateProducts(Map<String, List<ProductResponseDto>> apiResponse) {
@@ -223,29 +241,6 @@ public class OpenFoodFactsService {
         return Map.of("products", produtos);
     }
 
-
-    //* Método utilitário para traduzir alérgenos em uma resposta da API
-    private Map translateAllergen(Map apiResponse) {
-        if (apiResponse == null || !apiResponse.containsKey("products")) {
-            return apiResponse;
-        }
-
-        List<Map<String, Object>> produtos = (List<Map<String, Object>>) apiResponse.get("products");
-
-        for (Map<String, Object> produto : produtos) {
-            Object allergens = produto.get("allergens");
-
-            if (allergens instanceof String) {
-                String allergensStr = (String) allergens;
-                List<String> traduzidos = allergenTranslationService.translateAllergen(allergensStr);
-
-                // Substitui no map 
-                produto.put("allergens", traduzidos);
-            }
-        }
-
-        return apiResponse;
-    }
 
     private IngredientDto toIngredientDto(Map<String, Object> map) {
         List<Map<String, Object>> subIngredientsRaw = (List<Map<String, Object>>) map.get("ingredients");
