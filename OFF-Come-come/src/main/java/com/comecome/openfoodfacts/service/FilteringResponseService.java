@@ -24,7 +24,15 @@ public class FilteringResponseService {
             Map<String, List<ProductResponseDto>> rawResponse, // <-- 2. O parâmetro é Map (não Mono)
             AnamnesePatchDto anamnesePatchDto) {
 
-        List<ProductResponseDto> produtos = rawResponse.get("products");
+        List<ProductResponseDto> produtos = List.of();
+
+        if (rawResponse.get("products") != null) {
+            produtos = rawResponse.get("products");
+        }
+
+        if (rawResponse.get("product") != null){
+            produtos = rawResponse.get("product");
+        }
 
         List<ProductResponseDto> produtosComViolacoes = produtos.stream()
                 .map(produto -> {
