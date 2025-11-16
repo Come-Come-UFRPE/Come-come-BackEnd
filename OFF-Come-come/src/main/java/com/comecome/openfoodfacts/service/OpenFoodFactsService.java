@@ -12,7 +12,6 @@ import org.springframework.web.util.UriBuilder;
 
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.HashMap;
@@ -45,6 +44,8 @@ public class OpenFoodFactsService {
     private GetAnamneseService getAnamneseService;
 
     private final RabbitTemplate rabbitTemplate;
+    @Autowired
+    private FuzzySearchService fuzzySearchService;
 
 
     public OpenFoodFactsService(WebClient.Builder webClientBuilder, RabbitTemplate rabbitTemplate) {
@@ -68,7 +69,19 @@ public class OpenFoodFactsService {
         String query = search.getQuery();
         boolean isBarcode = query != null && query.matches("\\d+"); //regex verifica se a string é apenas numerica
 
+        //Dependendo se é barcode ou não, utiliza a mesma lógica de busca
         if (!isBarcode) {
+            return SearchLogic(webClient, countryCode, search);
+
+        } else {
+            return SearchLogic(web2, countryCode, search);
+        }
+    }
+
+
+    public Mono<Map> SearchLogic(WebClient web, String countryCode, AnamneseSearchDTO search) {
+
+        String query = search.getQuery();
 
         return webClient.get()
                 .uri(uriBuilder -> {
@@ -107,7 +120,7 @@ public class OpenFoodFactsService {
                             .map(produtoRaw -> this.toProductResponseDto(produtoRaw, List.of()))
                             .toList();
 
-                    AnamneseResponseDTO response = new AnamneseResponseDTO(search.getUserID() ,search.getQuery(), LocalDateTime.now());
+                    AnamneseResponseDTO response = new AnamneseResponseDTO(search.getUserID(), search.getQuery(), LocalDateTime.now());
 
                     rabbitTemplate.convertAndSend(historico, response);
 
@@ -115,25 +128,16 @@ public class OpenFoodFactsService {
                 })
                 .flatMap(mapOfProducts -> {
 
-                    Mono<AnamnesePatchDto> anamneseMono = getAnamneseService.getAnamneseById(userId);
+                    Mono<AnamnesePatchDto> anamneseMono = getAnamneseService.getAnamneseById(search.getUserID());
 
                     return anamneseMono
                             .defaultIfEmpty(new AnamnesePatchDto(null, Set.of(), Set.of(), Set.of()))
                             .map(anamneseDto -> {
-                        // 'anamneseDto' é o DTO real "desembrulhado"
+                                // 'anamneseDto' é o DTO real "desembrulhado"
 
-                        return filteringResponseService.filteringResponse(mapOfProducts, anamneseDto);
-                    });
+                                return filteringResponseService.filteringResponse(mapOfProducts, anamneseDto);
+                            });
                 }).map(this::translateProducts);
-}
-        else{
-
-            return web2.get() //busca por barcode
-                    .uri(query + ".json")
-                    .retrieve()
-                    .bodyToMono(Map.class);
-
-        }
     }
 
     private Map<String, List<ProductResponseDto>> translateProducts(Map<String, List<ProductResponseDto>> apiResponse) {
