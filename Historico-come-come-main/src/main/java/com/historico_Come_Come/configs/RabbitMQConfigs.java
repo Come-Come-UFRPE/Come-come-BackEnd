@@ -13,13 +13,13 @@ import org.springframework.amqp.core.Queue;
 @Configuration
 public class RabbitMQConfigs {
 
-    //@Value("${broker.queue.history.name}")
-    //private String queue;
 
-    //@Bean
-    //public Queue queue() {
-        //return new Queue(queue, true);
-    //}
+    private String queue = "fila-historico";
+
+    @Bean
+    public Queue queue() {
+        return new Queue(queue, true);
+    }
 
     @Bean
     public MessageConverter messageConverter() {
