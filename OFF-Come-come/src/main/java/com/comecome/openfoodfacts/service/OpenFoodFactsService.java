@@ -179,7 +179,7 @@ public class OpenFoodFactsService {
         return getAnamneseService.getAnamneseById(userId)
                 .defaultIfEmpty(new AnamnesePatchDto(null, Set.of(), Set.of(), Set.of()))
                 .map(anamnese -> {
-                    Map<String, List<ProductResponseDto>> afterAnamnese = filteringResponseService
+                    Map<String, Object> afterAnamnese = filteringResponseService
                             .filteringResponse(productsAsObject, anamnese);
 
                     Map<String, Object> afterUiFilter = uiFilterService
