@@ -1,271 +1,255 @@
 package com.comecome.openfoodfacts.service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
-import org.springframework.stereotype.Service;
-
+import com.comecome.openfoodfacts.models.RuleViolations;
 import com.comecome.openfoodfacts.dtos.UiFilterDto;
 import com.comecome.openfoodfacts.dtos.responseDtos.ProductResponseDto;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.stereotype.Service;
+
+import jakarta.annotation.PostConstruct;
+
+import java.io.InputStream;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UiFilterService {
 
-    public Map<String, Object> applyUiFilters(Map<String, Object> map, UiFilterDto filters) {
-        if (filters == null) {
-            return map;
+    private Map<String, RuleViolations> rules;
+
+    @PostConstruct
+    public void loadRules() {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream is = getClass().getResourceAsStream("/violationsUi.json");
+
+            if (is == null) {
+                throw new RuntimeException("Arquivo violationsUI.json não encontrado no classpath! Verifique se está em src/main/resources");
+            }
+
+            this.rules = mapper.readValue(is, new TypeReference<Map<String, RuleViolations>>() {});
+            
+        } catch (Exception e) {
+            throw new RuntimeException("Erro carregando violationsUI.json", e);
         }
+    }
+
+    // -------------------------------------------------------------------------
+    //  APLICAÇÃO GERAL DOS FILTROS
+    // -------------------------------------------------------------------------
+
+    public Map<String, Object> applyUiFilters(Map<String, Object> map, UiFilterDto filters) {
+        if (filters == null) return map;
 
         List<ProductResponseDto> produtos = (List<ProductResponseDto>) map.get("products");
 
-        // UiFilterService.java
-        List<ProductResponseDto> filtradosEAnatados = produtos.parallelStream()
-            .map(produto -> {
-                if (!passaNosFiltros(produto, filters)) return null;
+        List<ProductResponseDto> filtradosEAnotados = produtos.parallelStream()
+                .map(produto -> {
 
-                List<String> violacoes = new ArrayList<>(produto.violations());
-                violacoes.addAll(detectarViolacoesUi(produto, filters));
-                Set<String> unicas = new LinkedHashSet<>(violacoes);
+                    if (!passaNosFiltros(produto, filters))
+                        return null;
 
-                return new ProductResponseDto(
-                    produto.name(),
-                    produto.image(),
-                    produto.details(),
-                    new ArrayList<>(unicas)
-                );
-            })
-            .filter(Objects::nonNull)
-            .toList();
+                    List<String> violacoes = new ArrayList<>(produto.violations());
+                    violacoes.addAll(detectarViolacoesUi(produto, filters));
 
-        return Map.of("products", filtradosEAnatados);
+                    return new ProductResponseDto(
+                            produto.name(),
+                            produto.image(),
+                            produto.details(),
+                            new ArrayList<>(new LinkedHashSet<>(violacoes))
+                    );
+                })
+                .filter(Objects::nonNull)
+                .toList();
+
+        return Map.of("products", filtradosEAnotados);
     }
 
-    // --- FILTRO: produto deve respeitar os filtros selecionados ---
+    // -------------------------------------------------------------------------
+    //  FILTRO DE PASSAGEM DO PRODUTO
+    // -------------------------------------------------------------------------
+
     private boolean passaNosFiltros(ProductResponseDto p, UiFilterDto f) {
         var details = p.details();
         if (details == null) return true;
 
-        // ==== CATEGORIAS (obrigatório) ====
-        if (f.categories() != null && !f.categories().isEmpty() && details.ingredient_tags() != null) {
+        // CATEGORIAS
+        if (f.categories() != null && !f.categories().isEmpty()) {
+            if (details.ingredient_tags() == null) return false;
+
             boolean temCategoria = details.ingredient_tags().stream()
                     .anyMatch(tag -> f.categories().contains(tag.toLowerCase()));
+
             if (!temCategoria) return false;
         }
 
-        // ==== DIETAS (vegetariano, kosher, etc.) ====
+        // DIETAS
         if (f.diets() != null && !f.diets().isEmpty()) {
-            boolean atendeDieta = f.diets().stream()
-                    .allMatch(dieta -> atendePreferenciaDieta(p, dieta));
-            if (!atendeDieta) return false;
+            boolean ok = f.diets().stream()
+                    .allMatch(d -> checkDiet(p, d.toLowerCase()));
+            if (!ok) return false;
         }
 
-        // ==== NUTRICIONAL (baixo sódio, etc.) ====
+        // NUTRICIONAL (mantido como estava)
         if (f.nutritional() != null && !f.nutritional().isEmpty()) {
-            boolean atendeNutricional = f.nutritional().stream()
-                    .allMatch(restricao -> atendeRestricaoNutricional(p, restricao));
-            if (!atendeNutricional) return false;
+            boolean ok = f.nutritional().stream()
+                    .allMatch(r -> atendeRestricaoNutricional(p, r));
+            if (!ok) return false;
         }
-
-        // ==== ALÉRGICOS – NÃO FILTRAMOS AQUI ====
-        // Só vamos detectar a violação depois, não remover o produto.
 
         return true;
     }
 
-    // --- DETECÇÃO DE VIOLAÇÕES (igual à anamnese) ---
+    // -------------------------------------------------------------------------
+    //  DETECÇÃO DE VIOLAÇÕES — usando JSON
+    // -------------------------------------------------------------------------
+
     private List<String> detectarViolacoesUi(ProductResponseDto p, UiFilterDto f) {
         List<String> violations = new ArrayList<>();
 
-        var details = p.details();
-        if (details == null) return violations;
+        // ALÉRGICOS
+        if (f.allergens() != null) {
+            for (String allergen : f.allergens()) {
+                String key = allergen.toLowerCase();
+                RuleViolations rule = rules.get(key);
 
-        // 1. ALÉRGICOS – sempre verifica se o filtro está ativo
-        if (f.allergens() != null && !f.allergens().isEmpty()) {
-            f.allergens().forEach(alergeno -> {
-                String violacao = switch (alergeno.toLowerCase()) {
-                    case "gluten", "glúten"     -> checkIfContainsGluten(p)   ? "VIOLACAO_GLUTEN" : null;
-                    case "lactose"              -> checkIfContainsLactose(p)  ? "VIOLACAO_LACTOSE" : null;
-                    case "ovo", "ovos"          -> checkIfContainsEgg(p)      ? "VIOLACAO_OVO" : null;
-                    case "amendoim"             -> checkIfContainsPeanuts(p)  ? "VIOLACAO_AMENDOIM" : null;
-                    case "castanhas", "nozes"   -> checkIfContainsNuts(p)     ? "VIOLACAO_CASTANHAS_NOZES" : null;
-                    case "peixe", "peixes"      -> checkIfContainsFish(p)     ? "VIOLACAO_PEIXES" : null;
-                    case "frutos do mar", "frutos_do_mar" -> checkIfContainsSeaFood(p) ? "VIOLACAO_FRUTOS_DO_MAR" : null;
-                    case "soja"                 -> checkIfContainsSoy(p)      ? "VIOLACAO_SOJA" : null;
-                    default                     -> null;
-                };
-                if (violacao != null) violations.add(violacao);
-            });
+                if (rule != null && "allergen".equals(rule.getType())) {
+                    if (checkAllergen(p, key)) {
+                        violations.add(rule.getViolation_code());
+                    }
+                }
+            }
         }
 
-        // 2. DIETAS
-        if (f.diets() != null && !f.diets().isEmpty()) {
-            f.diets().forEach(dieta -> {
-                String violacao = switch (dieta.toLowerCase()) {
-                    case "vegetariano" -> !checkVegetarian(p) ? "VIOLACAO_VEGETARIANA" : null;
-                    case "vegano"      -> !checkVegan(p)       ? "VIOLACAO_VEGANA" : null;
-                    case "kosher"      -> !checkKosher(p)      ? "VIOLACAO_KOSHER" : null;
-                    case "halal"       -> !checkHalal(p)       ? "VIOLACAO_HALAL" : null;
-                    default            -> null;
-                };
-                if (violacao != null) violations.add(violacao);
-            });
+        // DIETAS
+        if (f.diets() != null) {
+            for (String d : f.diets()) {
+                String key = d.toLowerCase();
+                RuleViolations rule = rules.get(key);
+
+                if (rule != null && "diet".equals(rule.getType())) {
+                    if (!checkDiet(p, key)) {
+                        violations.add(rule.getViolation_code());
+                    }
+                }
+            }
         }
 
-        // 3. NUTRICIONAL
-        if (f.nutritional() != null && !f.nutritional().isEmpty()) {
-            f.nutritional().forEach(restricao -> {
-                String violacao = switch (restricao.toLowerCase()) {
-                    case "baixo_sodio", "baixo em sódio" -> isHighSodium(p) ? "VIOLACAO_ALTO_SODIO" : null;
-                    case "baixo_acucar", "baixo em açúcar" -> isHighSugar(p) ? "VIOLACAO_ALTO_ACUCAR" : null;
-                    case "baixo_gordura", "baixo em gordura" -> isHighFat(p) ? "VIOLACAO_ALTA_GORDURA" : null;
+        // NUTRICIONAL — mesma lógica original
+        if (f.nutritional() != null) {
+            for (String restricao : f.nutritional()) {
+                String v = switch (restricao.toLowerCase()) {
+                    case "baixo_sodio" -> isHighSodium(p) ? "VIOLACAO_ALTO_SODIO" : null;
+                    case "baixo_acucar" -> isHighSugar(p) ? "VIOLACAO_ALTO_ACUCAR" : null;
+                    case "baixo_gordura" -> isHighFat(p) ? "VIOLACAO_ALTA_GORDURA" : null;
                     default -> null;
                 };
-                if (violacao != null) violations.add(violacao);
-            });
+                if (v != null) violations.add(v);
+            }
         }
 
         return violations;
     }
 
-    // --- Funções de checagem (reaproveite ou crie) ---
-    private boolean checkIfContainsGluten(ProductResponseDto p) {
-        return containsIngredient(p, "en:wheat", "en:gluten", "gluten", "wheat");
+    // -------------------------------------------------------------------------
+    //  CHECKS GENÉRICOS — LENDO AS REGRAS DO JSON
+    // -------------------------------------------------------------------------
+
+    private boolean checkAllergen(ProductResponseDto p, String allergenKey) {
+        RuleViolations r = rules.get(allergenKey);
+        if (r == null || r.getTags() == null) return false;
+
+        return containsAnyTag(p, r.getTags());
     }
 
-    private boolean checkIfContainsLactose(ProductResponseDto p) {
-        return containsIngredient(p, "en:milk", "en:lactose", "en:whey", "en:casein", "milk", "lactose", "whey", "casein");
-    }
+    private boolean checkDiet(ProductResponseDto p, String dietKey) {
+        RuleViolations r = rules.get(dietKey);
+        if (r == null) return true;
 
-    private boolean checkIfContainsEgg(ProductResponseDto p) {
-        return containsIngredient(p, "en:egg", "en:albumen", "egg", "albumen");
-    }
+        // requires_tag
+        if (r.getRequires_tag() != null) {
+            List<String> tags = p.details().ingredient_tags();
+            boolean has = tags != null && tags.stream()
+                    .anyMatch(t -> t.equalsIgnoreCase(r.getRequires_tag()));
 
-    private boolean checkIfContainsPeanuts(ProductResponseDto p) {
-        return containsIngredient(p, "en:peanut", "peanut", "en:hazelnut");
-    }
-
-    private boolean checkIfContainsNuts(ProductResponseDto p) {
-        return containsIngredient(p,
-            "en:almond", "en:walnut", "en:cashew", "en:hazelnut", "en:pecan",
-            "almond", "walnut", "cashew", "hazelnut", "pecan"
-        );
-    }
-
-    private boolean checkIfContainsFish(ProductResponseDto p) {
-        return containsIngredient(p, "en:fish", "fish");
-    }
-
-    private boolean checkIfContainsSeaFood(ProductResponseDto p) {
-        return containsIngredient(p, "en:crustacean", "en:mollusc", "crustacean", "shrimp", "crab", "lobster");
-    }
-
-    private boolean checkIfContainsSoy(ProductResponseDto p) {
-        return containsIngredient(p, "en:soybean", "en:soy", "soybean", "soy");
-    }
-
-    private boolean checkVegetarian(ProductResponseDto p) {
-        return !containsIngredient(p,
-            "en:meat", "en:chicken", "en:pork", "en:beef", "en:fish", "en:crustacean",
-            "meat", "chicken", "pork", "beef", "fish", "shrimp"
-        );
-        // Ovo é permitido em vegetariano (ajuste se necessário)
-    }
-
-    private boolean checkVegan(ProductResponseDto p) {
-        return checkVegetarian(p)
-            && !checkIfContainsLactose(p)
-            && !checkIfContainsEgg(p);
-    }
-
-    private boolean checkHalal(ProductResponseDto p) {
-        return !containsIngredient(p, "en:pork", "en:gelatin", "en:alcohol", "pork", "gelatin", "alcohol");
-    }
-
-    private boolean checkKosher(ProductResponseDto p) {
-        var details = p.details();
-        if (details == null) return false;
-
-        // 1. Verifica se tem tag "kosher" nos ingredient_tags
-        if (details.ingredient_tags() != null) {
-            boolean hasKosherTag = details.ingredient_tags().stream()
-                .anyMatch(tag -> tag.toLowerCase().contains("kosher") || tag.equals("en:kosher"));
-            if (hasKosherTag) return true;
+            if (!has) return false;
         }
 
-        // 2. Verifica se NÃO tem ingredientes proibidos
-        boolean hasProhibited = containsIngredient(p,
-            "en:pork", "en:gelatin", "en:lard", "en:bacon",
-            "porco", "gelatina", "banha", "bacon"
-        );
+        // depends_on
+        if (r.getDepends_on() != null) {
+            for (String dep : r.getDepends_on()) {
 
-        return !hasProhibited;
-    }
+                if (rules.containsKey(dep)) {
+                    RuleViolations childRule = rules.get(dep);
 
-    private boolean isHighSodium(ProductResponseDto p) {
-        Map<String, Object> nutriments = p.details().nutriments();
-        if (nutriments == null) return false;
+                    if ("diet".equals(childRule.getType()) && !checkDiet(p, dep)) {
+                        return false;
+                    }
 
-        Object saltObj = nutriments.get("salt");
-        if (!(saltObj instanceof Number salt)) return false;
-
-        return salt.doubleValue() > 1.5; // >1.5g/100g
-    }
-
-    private boolean isHighSugar(ProductResponseDto p) {
-        Map<String, Object> nutriments = p.details().nutriments();
-        if (nutriments == null) return false;
-
-        Object sugarObj = nutriments.get("sugars");
-        if (!(sugarObj instanceof Number sugar)) return false;
-
-        return sugar.doubleValue() > 15; // >15g/100g
-    }
-
-    private boolean isHighFat(ProductResponseDto p) {
-        Map<String, Object> nutriments = p.details().nutriments();
-        if (nutriments == null) return false;
-
-        Object fatObj = nutriments.get("fat");
-        if (!(fatObj instanceof Number fat)) return false;
-
-        return fat.doubleValue() > 20; // >20g/100g
-    }
-
-    private boolean containsIngredient(ProductResponseDto p, String... openFoodFactsIds) {
-        if (p.details() == null || p.details().ingredients() == null) {
-            return false;
+                    if ("allergen".equals(childRule.getType()) && checkAllergen(p, dep)) {
+                        return false;
+                    }
+                }
+            }
         }
 
-        return p.details().ingredients().stream()
-            .anyMatch(ing -> {
-                if (ing.id() == null) return false;
-                String id = ing.id().toLowerCase();
-                return Arrays.stream(openFoodFactsIds)
-                    .anyMatch(expected -> id.equals(expected.toLowerCase()) || id.endsWith(":" + expected.toLowerCase()));
-            });
+        // exclusores
+        if (r.getExclusores() != null) {
+            if (containsAnyTag(p, r.getExclusores())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    private boolean atendePreferenciaDieta(ProductResponseDto p, String dieta) {
-        return switch (dieta.toLowerCase()) {
-            case "vegetariano" -> checkVegetarian(p);
-            case "vegano" -> checkVegan(p);
-            case "kosher" -> checkKosher(p);
-            case "halal" -> checkHalal(p);
-            default -> true;
-        };
+    // -------------------------------------------------------------------------
+    //  FUNÇÃO GENÉRICA DE MATCH DE INGREDIENTES (Open Food Facts)
+    // -------------------------------------------------------------------------
+
+    private boolean containsAnyTag(ProductResponseDto p, List<String> tags) {
+        if (p.details() == null || p.details().ingredients() == null) return false;
+
+        return p.details().ingredients().stream().anyMatch(ing -> {
+            if (ing.id() == null) return false;
+            String id = ing.id().toLowerCase();
+            return tags.stream().anyMatch(tag ->
+                    id.equals(tag) || id.endsWith(":" + tag));
+        });
     }
 
-    private boolean atendeRestricaoNutricional(ProductResponseDto p, String restricao) {
-        return switch (restricao.toLowerCase()) {
+    // -------------------------------------------------------------------------
+    //  CHECKS NUTRICIONAIS — mantidos como antes
+    // -------------------------------------------------------------------------
+
+    private boolean atendeRestricaoNutricional(ProductResponseDto p, String r) {
+        return switch (r.toLowerCase()) {
             case "baixo_sodio" -> !isHighSodium(p);
             case "baixo_acucar" -> !isHighSugar(p);
             case "baixo_gordura" -> !isHighFat(p);
             default -> true;
         };
+    }
+
+    private boolean isHighSodium(ProductResponseDto p) {
+        Map<String, Object> n = p.details().nutriments();
+        if (n == null) return false;
+        Object salt = n.get("salt");
+        return salt instanceof Number s && s.doubleValue() > 1.5;
+    }
+
+    private boolean isHighSugar(ProductResponseDto p) {
+        Map<String, Object> n = p.details().nutriments();
+        if (n == null) return false;
+        Object sugar = n.get("sugars");
+        return sugar instanceof Number s && s.doubleValue() > 15;
+    }
+
+    private boolean isHighFat(ProductResponseDto p) {
+        Map<String, Object> n = p.details().nutriments();
+        if (n == null) return false;
+        Object fat = n.get("fat");
+        return fat instanceof Number f && f.doubleValue() > 20;
     }
 }

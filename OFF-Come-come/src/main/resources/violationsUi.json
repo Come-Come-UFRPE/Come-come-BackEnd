@@ -1,0 +1,143 @@
+{
+  "gluten": {
+    "type": "allergen",
+    "tags": [
+      "en:gluten",
+      "en:wheat",
+      "en:wheat-flour",
+      "en:wheat-gluten",
+      "en:barley",
+      "en:malted-barley",
+      "en:cereal",
+      "en:cereal-flour",
+      "fr:avoine",
+      "es:avena"
+    ],
+    "violation_code": "VIOLACAO_GLUTEN"
+  },
+  "lactose": {
+    "type": "allergen",
+    "tags": [
+      "en:lactose",
+      "en:milk",
+      "en:milk-powder",
+      "en:milkfat",
+      "en:cream",
+      "en:skimmed-milk",
+      "en:skimmed-milk-powder",
+      "en:pasteurised-milk",
+      "en:cheese",
+      "en:whey",
+      "fr:protéines de lait de vache"
+    ],
+    "violation_code": "VIOLACAO_LACTOSE"
+  },
+  "ovo": {
+    "type": "allergen",
+    "tags": [
+      "en:egg",
+      "en:eggs"
+    ],
+    "violation_code": "VIOLACAO_OVO"
+  },
+  "amendoim": {
+    "type": "allergen",
+    "tags": [
+      "en:peanut",
+      "en:peanuts",
+      "en:hazelnut"
+    ],
+    "violation_code": "VIOLACAO_AMENDOIM"
+  },
+  "castanhas": {
+    "type": "allergen",
+    "tags": [
+      "en:nut",
+      "en:tree-nut",
+      "fr:noisettes (corylus avellana)",
+      "fr:amandes (amygdalus communis l.)",
+      "en:almond"
+    ],
+    "violation_code": "VIOLACAO_CASTANHAS"
+  },
+  "peixe": {
+    "type": "allergen",
+    "tags": [
+      "en:fish"
+    ],
+    "violation_code": "VIOLACAO_PEIXE"
+  },
+  "frutos_do_mar": {
+    "type": "allergen",
+    "tags": [
+      "en:crustaceans",
+      "en:molluscs",
+      "en:seafood"
+    ],
+    "violation_code": "VIOLACAO_FRUTOS_DO_MAR"
+  },
+  "soja": {
+    "type": "allergen",
+    "tags": [
+      "en:soya",
+      "en:soya-lecithin",
+      "en:soybeans",
+      "pl:sojowego",
+      "en:soya-bean"
+    ],
+    "violation_code": "VIOLACAO_SOJA"
+  },
+  "vegetariano": {
+    "type": "diet",
+    "exclusores": [
+      "en:meat",
+      "en:pork",
+      "en:chicken",
+      "en:beef",
+      "en:fish",
+      "en:crustaceans",
+      "en:molluscs",
+      "en:animal",
+      "en:animal-protein",
+      "en:pork-meat",
+      "en:poultry"
+    ],
+    "violation_code": "VIOLACAO_VEGETARIANA"
+  },
+  "vegano": {
+    "type": "diet",
+    "depends_on": [
+      "vegetariano",
+      "lactose",
+      "ovo",
+      "mel"
+    ],
+    "exclusores": [
+      "en:honey"
+    ],
+    "violation_code": "VIOLACAO_VEGANA"
+  },
+  "kosher": {
+    "type": "diet",
+    "exclusores": [
+      "en:pork",
+      "en:gelatin",
+      "en:crustaceans",
+      "en:molluscs",
+      "en:mixing-meat-and-milk",
+      "en:pork-meat"
+    ],
+    "requires_tag": "en:kosher",
+    "violation_code": "VIOLACAO_KOSHER"
+  },
+  "halal": {
+    "type": "diet",
+    "exclusores": [
+      "en:pork",
+      "en:alcohol",
+      "en:gelatin",
+      "en:pork-meat"
+    ],
+    "violation_code": "VIOLACAO_HALAL"
+  }
+}
