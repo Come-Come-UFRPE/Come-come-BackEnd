@@ -60,6 +60,7 @@ public class PasswordResetService {
     }
 
     //Função principal de Validação de Token
+    @Transactional
     public boolean validateToken(String email, String receivedOtp) {
         var user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         Optional<PasswordResetToken> tokenOptional = passwordRepository.findByUser(user);
@@ -77,7 +78,6 @@ public class PasswordResetService {
 
         // Verifica se o código bate com o hash
         if (passwordEncoder.matches(receivedOtp, token.getTokenHash())) {
-            passwordRepository.delete(token);
             return true;
         }
 
@@ -86,4 +86,21 @@ public class PasswordResetService {
         return false;
 
     }
+
+    public void resetPassword(String email, String otp, String newPassword){
+        var user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
+        PasswordResetToken token = passwordRepository.findByUser(user).orElseThrow(() -> new RuntimeException("Token de usuário não encontrado!"));
+
+        if (token.isExpired() || !passwordEncoder.matches(otp, token.getTokenHash())) {
+            throw new RuntimeException("Token inválido ou expirado na etapa final!");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        // 4. AGORA SIM: Deleta o token (Missão cumprida)
+        passwordRepository.delete(token);
+
+    }
+
 }
