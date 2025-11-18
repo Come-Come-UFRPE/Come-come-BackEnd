@@ -11,6 +11,9 @@ import javax.crypto.SecretKey;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.comecome.cadastro.exceptions.InvalidTokenException;
+import com.comecome.cadastro.exceptions.TokenExpiredException;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
@@ -52,11 +55,19 @@ public class JWTService {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser()                 // nova API (substitui parserBuilder)
-                .verifyWith(secretKey)        // verifica assinatura com a chave
+        try {
+            return Jwts.parser()            // nova API (substitui parserBuilder)
+                .verifyWith(secretKey)      // verifica assinatura com a chave
                 .build()
-                .parseSignedClaims(token)    // faz o parsing do token JWT
-                .getPayload();               // retorna os "claims" (dados do token)
+                .parseSignedClaims(token)   // faz o parsing do token JWT
+                .getPayload();              // retorna os "claims" (dados do token)
+        } 
+        catch (io.jsonwebtoken.ExpiredJwtException e) {
+            throw new TokenExpiredException();  
+        } 
+        catch (io.jsonwebtoken.JwtException e) {
+            throw new InvalidTokenException();
+        }
     }
 
     private <T> T extractClaim(String token, java.util.function.Function<Claims, T> claimsResolver) {
