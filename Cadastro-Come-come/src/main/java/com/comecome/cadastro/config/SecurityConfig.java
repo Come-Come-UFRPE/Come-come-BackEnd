@@ -40,7 +40,8 @@ public class SecurityConfig {
                                                         ).permitAll()
                                                         .requestMatchers(                                                        // ? Permissão do Swagger
                                                                 "reset-password/generate-token",
-                                                                "reset-password/verify-token"
+                                                                "reset-password/verify-token",
+                                                                "reset-password/change-password"
                                                         ).permitAll()
                                                         .anyRequest().authenticated())                                          //? Todas as requisições precisam estar autenticadas
                     .httpBasic(Customizer.withDefaults())                                                                       //? Habilita a autenticação HTTP Basic
