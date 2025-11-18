@@ -38,6 +38,10 @@ public class SecurityConfig {
                                                                 "/swagger-ui/**",
                                                                 "/v3/api-docs/**"
                                                         ).permitAll()
+                                                        .requestMatchers(                                                        // ? Permissão do Swagger
+                                                                "reset-password/generate-token",
+                                                                "reset-password/verify-token"
+                                                        ).permitAll()
                                                         .anyRequest().authenticated())                                          //? Todas as requisições precisam estar autenticadas
                     .httpBasic(Customizer.withDefaults())                                                                       //? Habilita a autenticação HTTP Basic
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))               //? Configura a política de criação de sessão como STATELESS (sem estado)
