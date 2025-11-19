@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.comecome.cadastro.config.filters.JWTEntryPoint;
 import com.comecome.cadastro.config.filters.JWTFilter;
 import com.comecome.cadastro.services.MyUserDetailsService;
 
@@ -25,6 +26,9 @@ public class SecurityConfig {
 
     @Autowired
     private JWTFilter jwtFilter;
+
+    @Autowired
+    private JWTEntryPoint jwtEntryPoint;
     
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,6 +46,7 @@ public class SecurityConfig {
                     .httpBasic(Customizer.withDefaults())                                                                       //? Habilita a autenticação HTTP Basic
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))               //? Configura a política de criação de sessão como STATELESS (sem estado)
                     .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                    .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtEntryPoint))
                     .build();
     }
 

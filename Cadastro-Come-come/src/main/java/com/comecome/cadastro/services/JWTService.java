@@ -43,7 +43,7 @@ public class JWTService {
         claims.put("role", "USER");
 
         Date now = new Date();
-        Date expiration = new Date(now.getTime() + 1000 * 60 * 60); // 1 hora em milissegundos
+        Date expiration = new Date(now.getTime() + 1000 * 60 * 1); // 1 hora em milissegundos
 
         return Jwts.builder()
                 .claims(claims)                 
