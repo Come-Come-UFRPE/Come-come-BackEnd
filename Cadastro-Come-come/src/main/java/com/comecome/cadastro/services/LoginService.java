@@ -1,6 +1,9 @@
 package com.comecome.cadastro.services;
 
+import com.comecome.cadastro.exceptions.EmailAlreadyExistsException;
+import com.comecome.cadastro.exceptions.UserNotFoundException;
 import com.comecome.cadastro.repositories.UserRepository;
+import jakarta.validation.constraints.Email;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,11 +32,11 @@ public class LoginService {
         if(authentication.isAuthenticated()){
             return new LoginResponseDTO(jwtService.generateToken(email), findByEmail(email).getUserId().toString(), findByEmail(email).isFezAnamnese());
         }
-        throw new RuntimeException("Usuário não autenticado");
+        throw new EmailAlreadyExistsException();
     }
 
     public User findByEmail(String email){
-        var user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        var user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
         return user;
     }
 }
