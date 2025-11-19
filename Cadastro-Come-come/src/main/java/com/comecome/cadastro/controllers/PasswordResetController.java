@@ -18,10 +18,9 @@ public class PasswordResetController {
     }
 
     @PostMapping("/generate-token")
-    public ResponseEntity<TokenDTO> generateToken(@RequestBody EmailRequestDTO emailRequest){
-        String token = passwordService.createNewToken(emailRequest.email());
-        TokenDTO dto = new TokenDTO(emailRequest.email(), token);
-        return ResponseEntity.ok(dto);
+    public ResponseEntity<Void> generateToken(@RequestBody EmailRequestDTO emailRequest){
+        passwordService.createNewToken(emailRequest.email());
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/verify-token")
@@ -29,7 +28,7 @@ public class PasswordResetController {
         return ResponseEntity.ok(passwordService.validateToken(token.email(), token.token()));
     }
 
-    @PostMapping("/change-password")
+    @PatchMapping("/change-password")
     public ResponseEntity<Void> resetPassword(@RequestBody TokenPatchDTO token){
         passwordService.resetPassword(token.email(),token.token(), token.newPassword());
         return ResponseEntity.ok().build();

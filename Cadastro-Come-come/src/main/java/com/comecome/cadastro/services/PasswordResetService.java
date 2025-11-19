@@ -1,6 +1,8 @@
 package com.comecome.cadastro.services;
 
 import com.comecome.cadastro.dtos.TokenDTO;
+import com.comecome.cadastro.exceptions.TokenExpiredException;
+import com.comecome.cadastro.exceptions.UserNotFoundException;
 import com.comecome.cadastro.models.PasswordResetToken;
 import com.comecome.cadastro.models.User;
 import com.comecome.cadastro.repositories.PasswordResetRepository;
@@ -35,8 +37,8 @@ public class PasswordResetService {
 
     //Função relacionada com a criação de token
     @Transactional
-    public String createNewToken(String email){
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+    public void createNewToken(String email){
+        User user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
 
         String otpCode = generateOTPToken();
 
@@ -46,7 +48,6 @@ public class PasswordResetService {
 
         rabbitTemplate.convertAndSend("",fila,sendDto);
 
-        return otpCode;
     }
 
     // Persistir um novo token no Banco de Dados
@@ -73,7 +74,7 @@ public class PasswordResetService {
     //Função principal de Validação de Token
     @Transactional
     public boolean validateToken(String email, String receivedOtp) {
-        var user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        var user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
         Optional<PasswordResetToken> tokenOptional = passwordRepository.findByUser(user);
         if (tokenOptional.isEmpty()) {
             return false;
@@ -100,12 +101,12 @@ public class PasswordResetService {
 
     //Função que vai atuar no reset da senha
     public void resetPassword(String email, String otp, String newPassword){
-        var user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
+        var user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
 
-        PasswordResetToken token = passwordRepository.findByUser(user).orElseThrow(() -> new RuntimeException("Token de usuário não encontrado!"));
+        PasswordResetToken token = passwordRepository.findByUser(user).orElseThrow(() -> new TokenExpiredException("Token de usuário não encontrado!"));
 
         if (token.isExpired() || !passwordEncoder.matches(otp, token.getTokenHash())) {
-            throw new RuntimeException("Token inválido ou expirado na etapa final!");
+            throw new TokenExpiredException("Token inválido ou expirado na etapa final!");
         }
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
