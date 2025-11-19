@@ -4,6 +4,8 @@ import com.comecome.cadastro.dtos.AnamneseDTO;
 import com.comecome.cadastro.dtos.UserPatchRecordDto;
 import com.comecome.cadastro.dtos.UserRecordDto;
 import com.comecome.cadastro.dtos.UserResponseDTO;
+import com.comecome.cadastro.exceptions.EmailAlreadyExistsException;
+import com.comecome.cadastro.exceptions.UserNotFoundException;
 import com.comecome.cadastro.models.User;
 import com.comecome.cadastro.repositories.UserRepository;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -32,7 +34,7 @@ public class UserService {
     }
 
     public UserResponseDTO getUserById(UUID id){
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        User user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
         return new UserResponseDTO(user);
     }
 
@@ -40,7 +42,7 @@ public class UserService {
     public User save(User user){
         System.out.println(user.getEmail());
         if(userRepository.findByEmail(user.getEmail()).isPresent()){
-            throw new IllegalArgumentException("Email já cadastrado");
+            throw new EmailAlreadyExistsException();
         }
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         user.setPassword(encoder.encode(user.getPassword()));
@@ -56,14 +58,14 @@ public class UserService {
 
         // 1. Busca a tupla (entidade) original do banco de dados
         User userFromDb = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
+                .orElseThrow(UserNotFoundException::new);
 
         if (dto.name() != null) {
             userFromDb.setName(dto.name());
         }
 
         if (dto.cidade() != null) {
-            // O usuário enviou um e-mail, então vamos atualizar
+            // O usuário enviou uma cidade, então vamos atualizar
             userFromDb.setCidade(dto.cidade());
         }
 
@@ -73,7 +75,7 @@ public class UserService {
         }
 
         if(dto.fezAnamnese()){
-            userFromDb.setFezAnamnese(true);
+            userFromDb.setFezAnamnese(dto.fezAnamnese());
         }
 
         return userRepository.save(userFromDb);
@@ -82,7 +84,7 @@ public class UserService {
     @Transactional
     public void atualizarStatusAnamnese(UUID userId){
 
-            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario id" + userId + "nao encontrado"));
+            User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("Usuario ID:" + userId + "não encontrado"));
 
             user.setFezAnamnese(true);
             userRepository.save(user);

@@ -1,6 +1,7 @@
 package com.historico_Come_Come.services;
 
 import com.historico_Come_Come.dtos.HistoryRecord;
+import com.historico_Come_Come.exceptions.HistoryNotFoundException;
 import com.historico_Come_Come.models.HistoryModel;
 import com.historico_Come_Come.repositories.HistoryRepository;
 import org.springframework.stereotype.Service;
@@ -53,7 +54,7 @@ public class HistoryService {
         boolean historicoExiste = historyRepository.existsByUserId(id);
 
         if (!historicoExiste) {
-            throw new RuntimeException("Usuário com ID " + id + " não encontrado.");
+            throw new HistoryNotFoundException("Usuário com ID " + id + " não encontrado.");
         }
         else {
             historyRepository.deleteAllByUserId(id);
