@@ -226,6 +226,28 @@ services:
     networks:
       - nt-general-come-come
 
+  ms-email:
+    build: ./Email-Come-come/.
+    ports:
+      - '8086:8086'
+    environment:
+      - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
+      - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
+      - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
+      - 'SERVER_PORT=8086'
+      - 'SPRING_APPLICATION_NAME=EMAIL'
+    depends_on:
+      eureka-server:
+        condition: service_started
+      postgres-historico:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      ms-off:
+        condition: service_started
+    networks:
+      - nt-general-come-come
+
 volumes:
   rabbitmq_data:
 
