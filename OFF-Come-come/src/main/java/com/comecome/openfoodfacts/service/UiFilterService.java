@@ -61,6 +61,7 @@ public class UiFilterService {
                     );
                 })
                 .filter(Objects::nonNull)
+                .filter(produto -> produto.violations().isEmpty())
                 .toList();
 
         return Map.of("products", filtradosEAnotados);
