@@ -58,6 +58,10 @@ spring:
           uri: lb://EMAIL
           predicates:
             - Path=/email/**
+        - id: favorite
+          uri: lb://FAVORITE
+          predicates:
+            - Path=/favorite/**
   data:
     redis:
       host: localhost #server do redis, o redis cuida da limitacao de requisicoes
@@ -88,6 +92,9 @@ springdoc:
 
       - url: /email/v3/api-docs
         name: E-mail API Service
+
+      - url: /favorite/v3/api-docs
+        name: Favotire API Service
 
 eureka: #nessa parte, mostramos como o servico se registra no eureka, se nao for feito, nao sera possivel encontrar
   client:
