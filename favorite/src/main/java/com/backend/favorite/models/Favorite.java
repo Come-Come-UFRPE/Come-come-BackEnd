@@ -22,6 +22,10 @@ public class Favorite {
 
     private String productId;
 
+    private String productName;
+
+    private String url;
+
     @ManyToOne
     @JoinColumn(name = "category_id")
     @JsonIgnoreProperties("favorites")

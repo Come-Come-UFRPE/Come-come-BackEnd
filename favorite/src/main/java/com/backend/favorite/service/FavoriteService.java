@@ -39,6 +39,8 @@ public class FavoriteService {
         Favorite favorite = new Favorite();
         favorite.setCategory(category);
         favorite.setProductId(favoriteDto.productId());
+        favorite.setProductName(favoriteDto.productName());
+        favorite.setUrl(favoriteDto.url());
         favoriteRepository.save(favorite);
         return favorite;
     }
