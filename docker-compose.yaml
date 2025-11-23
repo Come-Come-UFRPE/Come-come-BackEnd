@@ -248,6 +248,50 @@ services:
     networks:
       - nt-general-come-come
 
+  postgres-favoritos:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=ms-favoritos'
+      - 'POSTGRES_PASSWORD=boilerplate'
+      - 'POSTGRES_USER=postgres'
+      - 'POSTGRES_HOST_AUTH_METHOD=md5'
+    ports:
+      - '5439:5432'
+    networks:
+      - nt-general-come-come
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ms-favoritos:
+    build: ./favorite/.
+    ports:
+      - '8087:8087'
+    environment:
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-favoritos:5432/ms-favoritos'
+      - 'SPRING_DATASOURCE_USERNAME=postgres'
+      - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
+      - 'SPRING_JPA_HIBERNATE_DDL_AUTO=update'
+      - 'SPRING_JPA_SHOW_SQL=true'
+      - 'SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true'
+      - 'SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect'
+      - 'SPRING_JACKSON_SERIALIZATION_FAIL_ON_EMPTY_BEANS=false'
+      - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
+      - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
+      - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
+      - 'SERVER_PORT=8087'
+      - 'SPRING_APPLICATION_NAME=FAVORITE'
+    depends_on:
+      eureka-server:
+        condition: service_started
+      postgres-favoritos:
+        condition: service_healthy
+    networks:
+      - nt-general-come-come
+
+
 volumes:
   rabbitmq_data:
 
