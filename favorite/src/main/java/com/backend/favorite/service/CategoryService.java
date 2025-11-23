@@ -1,6 +1,7 @@
 package com.backend.favorite.service;
 
 import com.backend.favorite.dtos.CategoryDTO;
+import com.backend.favorite.dtos.CategoryPatchDto;
 import com.backend.favorite.models.Category;
 import com.backend.favorite.repositories.CategoryRepository;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,15 @@ public class CategoryService {
     //busca uma unica categoria
     public Category getCategoryById(UUID id) {
         return categoryRepository.findById(id).orElseThrow(() -> new RuntimeException("Category Not Found"));
+    }
+
+    public Category updateCategoryName(CategoryPatchDto categoryPatchDto) {
+
+       Category categoryOld = categoryRepository.findById(categoryPatchDto.id()).orElseThrow(() -> new RuntimeException("Category Not Found"));
+
+       categoryOld.setCategoryName(categoryPatchDto.name());
+       return categoryRepository.save(categoryOld);
+
     }
 
 

@@ -1,6 +1,7 @@
 package com.backend.favorite.controllers;
 
 import com.backend.favorite.dtos.CategoryDTO;
+import com.backend.favorite.dtos.CategoryPatchDto;
 import com.backend.favorite.models.Category;
 import com.backend.favorite.service.CategoryService;
 import org.springframework.http.HttpStatus;
@@ -36,6 +37,11 @@ public class CategoryController {
     @GetMapping("/id/{categoryId}")
     public ResponseEntity<Category> getCategoryById(@PathVariable UUID categoryId) {
         return ResponseEntity.ok(categoryService.getCategoryById(categoryId));
+    }
+
+    @PatchMapping("/update")
+    public ResponseEntity<Category> updateCategory(@RequestBody CategoryPatchDto categoryDTO) {
+        return ResponseEntity.ok(categoryService.updateCategoryName(categoryDTO));
     }
 
     @DeleteMapping("/{categoryId}")
