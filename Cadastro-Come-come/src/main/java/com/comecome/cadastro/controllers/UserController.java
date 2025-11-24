@@ -49,5 +49,11 @@ public class UserController {
     public ResponseEntity<UserResponseDTO> getUser(@PathVariable("id") UUID id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> removeUser (@PathVariable("id") UUID id){
+        userService.removeUser(id);
+        return ResponseEntity.ok("Usuário removido com sucesso!");
+    }
     
 }
