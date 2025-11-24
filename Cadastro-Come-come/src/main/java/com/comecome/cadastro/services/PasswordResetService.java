@@ -24,7 +24,7 @@ public class PasswordResetService {
     private final PasswordEncoder passwordEncoder;
     private final RabbitTemplate rabbitTemplate;
 
-    private static final String fila = "send-emails";
+    private static final String fila = "send-emails-reset";
 
     public PasswordResetService(UserRepository userRepository, PasswordResetRepository repository, PasswordEncoder passwordEncoder, RabbitTemplate rabbitTemplate) {
         this.userRepository = userRepository;

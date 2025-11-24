@@ -94,5 +94,12 @@ public class UserService {
     }
 
 
+    @Transactional
+    public void removeUser(UUID userId) {
+        User removed = userRepository.findByUserId(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        userRepository.delete(removed);
+    }
 }
 
