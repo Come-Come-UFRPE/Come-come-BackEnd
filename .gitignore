@@ -9,3 +9,6 @@
 **/build/
 **/target/
 **/node_modules/
+
+# Enviroment Variables
+.env

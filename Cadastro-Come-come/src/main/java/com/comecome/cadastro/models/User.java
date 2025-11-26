@@ -1,12 +1,20 @@
 package com.comecome.cadastro.models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.UUID;
 
 @Entity
 @Table(name = "TB_USERS")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class User implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -16,6 +24,7 @@ public class User implements Serializable {
 
     private String name;
     private String email;
+    private String profile;
     private String password;
 
     private String cidade;
@@ -24,71 +33,4 @@ public class User implements Serializable {
 
     private boolean fezAnamnese;
 
-    public boolean isFezAnamnese() {
-        return fezAnamnese;
-    }
-
-    public void setFezAnamnese(boolean fezAnamnese) {
-        this.fezAnamnese = fezAnamnese;
-    }
-
-    public int getIdade() {
-        return idade;
-    }
-
-    public void setIdade(int idade) {
-        this.idade = idade;
-    }
-
-    public String getCidade() {
-        return cidade;
-    }
-
-    public void setCidade(String cidade) {
-        this.cidade = cidade;
-    }
-
-    public String getEstado() {
-        return estado;
-    }
-
-    public void setEstado(String estado) {
-        this.estado = estado;
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public void setUserId(UUID userId) {
-        this.userId = userId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public static long getSerialversionuid() {
-        return serialVersionUID;
-    }
 }

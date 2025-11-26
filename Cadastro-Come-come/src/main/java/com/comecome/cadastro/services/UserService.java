@@ -14,7 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,10 +25,12 @@ import java.util.UUID;
 public class UserService {
 
     final UserRepository userRepository;
+    private final BlobStorageService blobStorageService;
 
 
-    public UserService(UserRepository userRepository){
+    public UserService(UserRepository userRepository, BlobStorageService blobStorageService){
         this.userRepository = userRepository;
+        this.blobStorageService = blobStorageService;
 
     }
 
@@ -99,7 +104,32 @@ public class UserService {
         User removed = userRepository.findByUserId(userId)
                 .orElseThrow(UserNotFoundException::new);
 
+        //Remove a imagem do storage da Azure
+        blobStorageService.deleteProfilePicture(userId);
         userRepository.delete(removed);
+    }
+
+    //Gerenciamento de Profile Picture
+    public String updateProfilePicture(UUID userId, MultipartFile file) throws IOException {
+
+        // 1. Ver se o User existe
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        String fileName = "users/" + userId + "/profile.jpg";
+
+        // 2. Upload para o Azure
+        String fileUrl = blobStorageService.uploadFile(
+                fileName,
+                file.getInputStream(),
+                file.getSize()
+        );
+
+        // 3. Salvar o NOVO link no banco
+        user.setProfile(fileUrl);
+        userRepository.save(user);
+
+        return fileUrl;
     }
 }
 

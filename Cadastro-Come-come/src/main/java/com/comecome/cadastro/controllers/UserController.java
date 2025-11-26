@@ -12,9 +12,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/users")
@@ -54,6 +56,16 @@ public class UserController {
     public ResponseEntity<String> removeUser (@PathVariable("id") UUID id){
         userService.removeUser(id);
         return ResponseEntity.ok("Usuário removido com sucesso!");
+    }
+
+    //Adicionar ou Atualizar o perfil
+    @PostMapping("/{id}/profile")
+    public ResponseEntity<String> updateProfile(@PathVariable("id") UUID id, @RequestParam("file") MultipartFile file){
+        try{
+            return ResponseEntity.ok(userService.updateProfilePicture(id, file));
+        } catch (IOException e){
+            return ResponseEntity.internalServerError().body("Erro ao processar imagem");
+        }
     }
     
 }

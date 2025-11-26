@@ -1,19 +1,19 @@
 services:
 
-  # Eureka Server para service discovery
+  # Eureka Server
   eureka-server:
     build: ./eureka-server/.
     container_name: eureka-server
     ports:
-      - '8761:8761'
+      - '${EUREKA_PORT}:8761'
     networks:
-      - nt-general-come-come
+      - ${NETWORK_NAME}
 
   # API Gateway
   api-gateway:
     build: ./api-gateway/.
     ports:
-      - '8083:8083'
+      - '${GATEWAY_PORT}:${GATEWAY_PORT}'
     environment:
       - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
       - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
@@ -22,8 +22,8 @@ services:
       - 'SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWERCASE-SERVICE-ID=true'
       - 'SPRING_DATA_REDIS_HOST=redis'
       - 'SPRING_DATA_REDIS_PORT=6379'
-      - 'SPRING_DATA_REDIS_PASSWORD=boilerplate'
-      - 'SERVER_PORT=8083'
+      - 'SPRING_DATA_REDIS_PASSWORD=${GLOBAL_PASSWORD}'
+      - 'SERVER_PORT=${GATEWAY_PORT}'
       - 'SPRING_APPLICATION_NAME=api-gateway'
     depends_on:
       eureka-server:
@@ -31,50 +31,51 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - nt-general-come-come
+      - ${NETWORK_NAME}
 
   rabbitmq:
     image: rabbitmq:3.13-management
     container_name: rabbitmq
     hostname: rabbitmq
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "${RABBITMQ_AMQP_PORT}:5672"
+      - "${RABBITMQ_MGMT_PORT}:15672"
     environment:
-      - RABBITMQ_DEFAULT_USER=boilerplate
-      - RABBITMQ_DEFAULT_PASS=boilerplate
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${GLOBAL_PASSWORD}
       - RABBITMQ_NODENAME=rabbit@rabbitmq
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
-      - nt-general-come-come
+      - ${NETWORK_NAME}
 
   redis:
     image: 'redis:latest'
     ports:
-      - '6379:6379'
+      - '${REDIS_PORT}:6379'
     environment:
-      - 'REDIS_PASSWORD=boilerplate'
-    command: redis-server --requirepass boilerplate
+      - 'REDIS_PASSWORD=${GLOBAL_PASSWORD}'
+    command: redis-server --requirepass ${GLOBAL_PASSWORD}
     networks:
-      - nt-general-come-come
+      - ${NETWORK_NAME}
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "boilerplate", "--raw", "incr", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${GLOBAL_PASSWORD}", "--raw", "incr", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
 
+  # --- MS OFF ---
   postgres-off:
     image: 'postgres:latest'
     environment:
-      - 'POSTGRES_DB=ms-off'
-      - 'POSTGRES_PASSWORD=boilerplate'
+      - 'POSTGRES_DB=${DB_OFF_NAME}'
+      - 'POSTGRES_PASSWORD=${GLOBAL_PASSWORD}'
       - 'POSTGRES_USER=postgres'
       - 'POSTGRES_HOST_AUTH_METHOD=md5'
     ports:
-      - '5433:5432'
+      - '${DB_OFF_EXT_PORT}:5432'
     networks:
-      - nt-general-come-come
+      - ${NETWORK_NAME}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -84,15 +85,15 @@ services:
   ms-off:
     build: ./OFF-Come-come/.
     ports:
-      - '8082:8082'
+      - '${MS_OFF_PORT}:${MS_OFF_PORT}'
     environment:
-      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-off:5432/ms-off'
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-off:5432/${DB_OFF_NAME}'
       - 'SPRING_DATASOURCE_USERNAME=postgres'
-      - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
+      - 'SPRING_DATASOURCE_PASSWORD=${GLOBAL_PASSWORD}'
       - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
       - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
       - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
-      - 'SERVER_PORT=8082'
+      - 'SERVER_PORT=${MS_OFF_PORT}'
       - 'SPRING_APPLICATION_NAME=OPENFOODFACTS'
     depends_on:
       eureka-server:
@@ -102,19 +103,20 @@ services:
       rabbitmq:
         condition: service_started
     networks:
-      - nt-general-come-come
+      - ${NETWORK_NAME}
 
+  # --- MS CADASTRO ---
   postgres-cadastro:
     image: 'postgres:latest'
     environment:
-      - 'POSTGRES_DB=ms-cadastro'
-      - 'POSTGRES_PASSWORD=boilerplate'
+      - 'POSTGRES_DB=${DB_CADASTRO_NAME}'
+      - 'POSTGRES_PASSWORD=${GLOBAL_PASSWORD}'
       - 'POSTGRES_USER=postgres'
       - 'POSTGRES_HOST_AUTH_METHOD=md5'
     ports:
-      - '5431:5432'
+      - '${DB_CADASTRO_EXT_PORT}:5432'
     networks:
-      - nt-general-come-come
+      - ${NETWORK_NAME}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -124,16 +126,19 @@ services:
   ms-cadastro:
     build: ./Cadastro-Come-come/.
     ports:
-      - '8081:8081'
+      - '${MS_CADASTRO_PORT}:${MS_CADASTRO_PORT}'
     environment:
-      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-cadastro:5432/ms-cadastro'
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-cadastro:5432/${DB_CADASTRO_NAME}'
       - 'SPRING_DATASOURCE_USERNAME=postgres'
-      - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
+      - 'SPRING_DATASOURCE_PASSWORD=${GLOBAL_PASSWORD}'
       - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
       - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
       - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
-      - 'SERVER_PORT=8081'
+      - 'SERVER_PORT=${MS_CADASTRO_PORT}'
       - 'SPRING_APPLICATION_NAME=CADASTRO'
+      - 'AZURE_STORAGE_ACCOUNT-NAME=${AZURE_ACCOUNT_NAME}'
+      - 'AZURE_STORAGE_ACCOUNT-KEY=${AZURE_ACCOUNT_KEY}'
+      - 'AZURE_STORAGE_CONTAINER-NAME=${AZURE_CONTAINER_NAME}'
     depends_on:
       eureka-server:
         condition: service_started
@@ -142,19 +147,20 @@ services:
       rabbitmq:
         condition: service_started
     networks:
-      - nt-general-come-come
+      - ${NETWORK_NAME}
 
+  # --- MS ANAMNESE ---
   postgres-anamnese:
     image: 'postgres:latest'
     environment:
-      - 'POSTGRES_DB=ms-anamnese'
-      - 'POSTGRES_PASSWORD=boilerplate'
+      - 'POSTGRES_DB=${DB_ANAMNESE_NAME}'
+      - 'POSTGRES_PASSWORD=${GLOBAL_PASSWORD}'
       - 'POSTGRES_USER=postgres'
       - 'POSTGRES_HOST_AUTH_METHOD=md5'
     ports:
-      - '5434:5432'
+      - '${DB_ANAMNESE_EXT_PORT}:5432'
     networks:
-      - nt-general-come-come
+      - ${NETWORK_NAME}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -164,15 +170,15 @@ services:
   ms-anamnese:
     build: ./Anamnese-Come-come/.
     ports:
-      - '8084:8084'
+      - '${MS_ANAMNESE_PORT}:${MS_ANAMNESE_PORT}'
     environment:
-      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-anamnese:5432/ms-anamnese'
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-anamnese:5432/${DB_ANAMNESE_NAME}'
       - 'SPRING_DATASOURCE_USERNAME=postgres'
-      - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
+      - 'SPRING_DATASOURCE_PASSWORD=${GLOBAL_PASSWORD}'
       - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
       - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
       - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
-      - 'SERVER_PORT=8084'
+      - 'SERVER_PORT=${MS_ANAMNESE_PORT}'
       - 'SPRING_APPLICATION_NAME=ANAMNESE'
     depends_on:
       eureka-server:
@@ -182,19 +188,20 @@ services:
       rabbitmq:
         condition: service_started
     networks:
-      - nt-general-come-come
+      - ${NETWORK_NAME}
 
+  # --- MS HISTORICO ---
   postgres-historico:
     image: 'postgres:latest'
     environment:
-      - 'POSTGRES_DB=ms-historico'
-      - 'POSTGRES_PASSWORD=boilerplate'
+      - 'POSTGRES_DB=${DB_HISTORICO_NAME}'
+      - 'POSTGRES_PASSWORD=${GLOBAL_PASSWORD}'
       - 'POSTGRES_USER=postgres'
       - 'POSTGRES_HOST_AUTH_METHOD=md5'
     ports:
-      - '5437:5432'
+      - '${DB_HISTORICO_EXT_PORT}:5432'
     networks:
-      - nt-general-come-come
+      - ${NETWORK_NAME}
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
@@ -204,15 +211,15 @@ services:
   ms-historico:
     build: ./Historico-come-come-main/.
     ports:
-      - '8085:8085'
+      - '${MS_HISTORICO_PORT}:${MS_HISTORICO_PORT}'
     environment:
-      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-historico:5432/ms-historico'
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-historico:5432/${DB_HISTORICO_NAME}'
       - 'SPRING_DATASOURCE_USERNAME=postgres'
-      - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
+      - 'SPRING_DATASOURCE_PASSWORD=${GLOBAL_PASSWORD}'
       - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
       - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
       - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
-      - 'SERVER_PORT=8085'
+      - 'SERVER_PORT=${MS_HISTORICO_PORT}'
       - 'SPRING_APPLICATION_NAME=HISTORICO'
     depends_on:
       eureka-server:
@@ -224,17 +231,18 @@ services:
       ms-off:
         condition: service_started
     networks:
-      - nt-general-come-come
+      - ${NETWORK_NAME}
 
+  # --- MS EMAIL ---
   ms-email:
     build: ./Email-Come-come/.
     ports:
-      - '8086:8086'
+      - '${MS_EMAIL_PORT}:${MS_EMAIL_PORT}'
     environment:
       - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
       - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
       - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
-      - 'SERVER_PORT=8086'
+      - 'SERVER_PORT=${MS_EMAIL_PORT}'
       - 'SPRING_APPLICATION_NAME=EMAIL'
     depends_on:
       eureka-server:
@@ -246,19 +254,20 @@ services:
       ms-cadastro:
         condition: service_started
     networks:
-      - nt-general-come-come
+      - ${NETWORK_NAME}
 
+  # --- MS FAVORITOS ---
   postgres-favoritos:
     image: 'postgres:latest'
     environment:
-      - 'POSTGRES_DB=ms-favoritos'
-      - 'POSTGRES_PASSWORD=boilerplate'
+      - 'POSTGRES_DB=${DB_FAVORITOS_NAME}'
+      - 'POSTGRES_PASSWORD=${GLOBAL_PASSWORD}'
       - 'POSTGRES_USER=postgres'
       - 'POSTGRES_HOST_AUTH_METHOD=md5'
     ports:
-      - '5439:5432'
+      - '${DB_FAVORITOS_EXT_PORT}:5432'
     networks:
-      - nt-general-come-come
+      - ${NETWORK_NAME}
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
@@ -268,11 +277,11 @@ services:
   ms-favoritos:
     build: ./favorite/.
     ports:
-      - '8087:8087'
+      - '${MS_FAVORITOS_PORT}:${MS_FAVORITOS_PORT}'
     environment:
-      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-favoritos:5432/ms-favoritos'
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-favoritos:5432/${DB_FAVORITOS_NAME}'
       - 'SPRING_DATASOURCE_USERNAME=postgres'
-      - 'SPRING_DATASOURCE_PASSWORD=boilerplate'
+      - 'SPRING_DATASOURCE_PASSWORD=${GLOBAL_PASSWORD}'
       - 'SPRING_JPA_HIBERNATE_DDL_AUTO=update'
       - 'SPRING_JPA_SHOW_SQL=true'
       - 'SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true'
@@ -281,7 +290,7 @@ services:
       - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
       - 'EUREKA_CLIENT_REGISTER-WITH-EUREKA=true'
       - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
-      - 'SERVER_PORT=8087'
+      - 'SERVER_PORT=${MS_FAVORITOS_PORT}'
       - 'SPRING_APPLICATION_NAME=FAVORITE'
     depends_on:
       eureka-server:
@@ -289,12 +298,12 @@ services:
       postgres-favoritos:
         condition: service_healthy
     networks:
-      - nt-general-come-come
-
+      - ${NETWORK_NAME}
 
 volumes:
   rabbitmq_data:
 
 networks:
   nt-general-come-come:
+    name: ${NETWORK_NAME}
     driver: bridge
