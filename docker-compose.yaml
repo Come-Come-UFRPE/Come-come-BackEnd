@@ -244,6 +244,8 @@ services:
       - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
       - 'SERVER_PORT=${MS_EMAIL_PORT}'
       - 'SPRING_APPLICATION_NAME=EMAIL'
+      - 'SPRING.MAIL.USERNAME=${MAIL_USERNAME}'
+      - 'SPRING.MAIL.PASSWORD=${MAIL_PASSWORD}'
     depends_on:
       eureka-server:
         condition: service_started

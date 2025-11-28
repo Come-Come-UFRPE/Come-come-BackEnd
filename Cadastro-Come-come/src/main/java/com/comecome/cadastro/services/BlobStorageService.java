@@ -25,7 +25,7 @@ public class BlobStorageService {
 
     public void deleteProfilePicture(UUID userId) {
         // Reconstrói o caminho do arquivo (baseado na lógica que definimos antes)
-        String path = String.format("users/%d/profile.jpg", userId);
+        String path = "users/" + userId + "/profile.jpg";
 
         BlobClient client = blobContainerClient.getBlobClient(path);
 

@@ -1,7 +1,7 @@
 package com.comecome.cadastro.models;
 
+import com.comecome.cadastro.models.enums.TokenType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,8 +13,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "tb_password_reset_token")
-public class PasswordResetToken {
+@Table(name = "tb_verification_token")
+public class VerificationToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -24,15 +24,19 @@ public class PasswordResetToken {
 
     private LocalDateTime expiryDate;
 
+
+    private TokenType tokenType;
+
     private int attemptCount = 0;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(nullable = false, name = "user_id", unique = true)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(nullable = false, name = "user_id")
     private User user;
 
-    public PasswordResetToken(String tokenHash, int timeToExpireinMinutes, User user) {
+    public VerificationToken(String tokenHash, int timeToExpireinMinutes, TokenType tokenType, User user) {
         this.tokenHash = tokenHash;
         this.expiryDate = LocalDateTime.now().plusMinutes(timeToExpireinMinutes);
+        this.tokenType = tokenType;
         this.attemptCount = 0;
         this.user = user;
     }

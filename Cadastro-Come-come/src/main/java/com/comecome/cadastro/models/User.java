@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -31,6 +32,12 @@ public class User implements Serializable {
     private String estado;
     private int idade;
 
+    //Validações tanto da anamnese quanto de confirmação de email
     private boolean fezAnamnese;
+    @Column(nullable = false)
+    private boolean fezConfirmacao;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<VerificationToken> tokens;
 
 }

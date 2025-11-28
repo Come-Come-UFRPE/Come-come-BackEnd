@@ -3,8 +3,9 @@ package com.comecome.cadastro.services;
 import com.comecome.cadastro.dtos.TokenDTO;
 import com.comecome.cadastro.exceptions.TokenExpiredException;
 import com.comecome.cadastro.exceptions.UserNotFoundException;
-import com.comecome.cadastro.models.PasswordResetToken;
+import com.comecome.cadastro.models.VerificationToken;
 import com.comecome.cadastro.models.User;
+import com.comecome.cadastro.models.enums.TokenType;
 import com.comecome.cadastro.repositories.PasswordResetRepository;
 import com.comecome.cadastro.repositories.UserRepository;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -17,16 +18,16 @@ import java.security.SecureRandom;
 import java.util.Optional;
 
 @Service
-public class PasswordResetService {
+public class TokenService {
 
     private final UserRepository userRepository;
     private final PasswordResetRepository passwordRepository;
     private final PasswordEncoder passwordEncoder;
     private final RabbitTemplate rabbitTemplate;
 
-    private static final String fila = "send-emails-reset";
+    private static final String fila = "send-emails";
 
-    public PasswordResetService(UserRepository userRepository, PasswordResetRepository repository, PasswordEncoder passwordEncoder, RabbitTemplate rabbitTemplate) {
+    public TokenService(UserRepository userRepository, PasswordResetRepository repository, PasswordEncoder passwordEncoder, RabbitTemplate rabbitTemplate) {
         this.userRepository = userRepository;
         this.passwordRepository = repository;
         this.passwordEncoder = passwordEncoder;
@@ -37,26 +38,26 @@ public class PasswordResetService {
 
     //Função relacionada com a criação de token
     @Transactional
-    public void createNewToken(String email){
+    public void createNewToken(String email, TokenType tokenType){
         User user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
 
         String otpCode = generateOTPToken();
 
-        TokenDTO sendDto = new TokenDTO(email,otpCode);
+        TokenDTO sendDto = new TokenDTO(email,otpCode, tokenType.toString());
 
-        persistNewToken(user, otpCode);
+        persistNewToken(user, otpCode, tokenType);
 
         rabbitTemplate.convertAndSend("",fila,sendDto);
 
     }
 
     // Persistir um novo token no Banco de Dados
-    public void persistNewToken(User user, String rawOtp){
-        passwordRepository.findByUser(user).ifPresent(passwordRepository::delete);
+    public void persistNewToken(User user, String rawOtp, TokenType tokenType){
+        passwordRepository.findByUserAndTokenType(user, tokenType).ifPresent(passwordRepository::delete);
 
         String hashing = passwordEncoder.encode(rawOtp);
 
-        PasswordResetToken newToken = new PasswordResetToken(hashing, 10, user);
+        VerificationToken newToken = new VerificationToken(hashing, 10, tokenType, user);
 
         passwordRepository.save(newToken);
     }
@@ -73,14 +74,14 @@ public class PasswordResetService {
 
     //Função principal de Validação de Token
     @Transactional
-    public boolean validateToken(String email, String receivedOtp) {
+    public boolean validateToken(String email, String receivedOtp, TokenType type) {
         var user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
-        Optional<PasswordResetToken> tokenOptional = passwordRepository.findByUser(user);
+        Optional<VerificationToken> tokenOptional = passwordRepository.findByUserAndTokenType(user, type);
         if (tokenOptional.isEmpty()) {
             return false;
         }
 
-        PasswordResetToken token = tokenOptional.get();
+        VerificationToken token = tokenOptional.get();
 
         // Validações de Segurança
         if (token.isExpired() || token.isMaxAttemptExceed()) {
@@ -103,7 +104,7 @@ public class PasswordResetService {
     public void resetPassword(String email, String otp, String newPassword){
         var user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
 
-        PasswordResetToken token = passwordRepository.findByUser(user).orElseThrow(() -> new TokenExpiredException("Token de usuário não encontrado!"));
+        VerificationToken token = passwordRepository.findByUserAndTokenType(user, TokenType.PASSWORD_RESET).orElseThrow(() -> new TokenExpiredException("Token de usuário não encontrado!"));
 
         if (token.isExpired() || !passwordEncoder.matches(otp, token.getTokenHash())) {
             throw new TokenExpiredException("Token inválido ou expirado na etapa final!");
@@ -115,6 +116,23 @@ public class PasswordResetService {
         userRepository.save(user);
 
 
+
+        passwordRepository.delete(token);
+
+    }
+
+    //Função que vai atuar na confirmação de senha
+    public void confirmEmail(String email, String otp){
+        var user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
+
+        VerificationToken token = passwordRepository.findByUserAndTokenType(user, TokenType.EMAIL_VERIFICATION).orElseThrow(() -> new TokenExpiredException("Token de usuário não encontrado!"));
+
+        if (token.isExpired() || !passwordEncoder.matches(otp, token.getTokenHash())) {
+            throw new TokenExpiredException("Token inválido ou expirado na etapa final!");
+        }
+
+        user.setFezConfirmacao(true);
+        userRepository.save(user);
 
         passwordRepository.delete(token);
 

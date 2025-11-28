@@ -16,9 +16,7 @@ public class RabbitConfig {
 
     public static final String fila = "anamnese-criada";
 
-    public static final String fila_email_reset = "send-emails-reset";
-
-    public static final String fila_email_confirmation = "send-emails-confirmation";
+    public static final String fila_email_reset = "send-emails";
 
     @Bean
     public Queue anamneseQueue() {
@@ -34,10 +32,4 @@ public class RabbitConfig {
 
     }
 
-    @Bean
-    public Queue emailConfirmationQueue() {
-
-        return new Queue(fila_email_confirmation, true);
-
-    }
 }
