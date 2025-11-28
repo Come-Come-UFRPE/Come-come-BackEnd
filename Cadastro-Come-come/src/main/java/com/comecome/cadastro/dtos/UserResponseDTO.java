@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public record UserResponseDTO(UUID id,
                               String name,
+                              String profile,
                               String email,
                               String cidade,
                               String estado,
@@ -16,6 +17,7 @@ public record UserResponseDTO(UUID id,
         this(
                 user.getUserId(),
                 user.getName(),
+                user.getProfile(),
                 user.getEmail(),
                 user.getCidade(),
                 user.getEstado(),
