@@ -81,6 +81,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    volumes:
+      - ./OFF-Come-come/src/main/resources/OFF.sql:/docker-entrypoint-initdb.d/01-init-off.sql  
+      - postgres_off_data:/var/lib/postgresql
 
   ms-off:
     build: ./OFF-Come-come/.
@@ -95,6 +98,9 @@ services:
       - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
       - 'SERVER_PORT=${MS_OFF_PORT}'
       - 'SPRING_APPLICATION_NAME=OPENFOODFACTS'
+      - 'SPRING_DATASOURCE_HIKARI_CONNECTION-TIMEOUT=300000'
+      - 'SPRING_DATASOURCE_HIKARI_INITIALIZATION-FAIL-TIMEOUT=-1'
+      - 'SPRING_JPA_HIBERNATE_DDL_AUTO=none'
     depends_on:
       eureka-server:
         condition: service_started
@@ -284,7 +290,7 @@ services:
       - 'SPRING_DATASOURCE_PASSWORD=${GLOBAL_PASSWORD}'
       - 'SPRING_JPA_HIBERNATE_DDL_AUTO=update'
       - 'SPRING_JPA_SHOW_SQL=true'
-      - 'SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true'
+      - 'SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true' 
       - 'SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect'
       - 'SPRING_JACKSON_SERIALIZATION_FAIL_ON_EMPTY_BEANS=false'
       - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
@@ -302,6 +308,7 @@ services:
 
 volumes:
   rabbitmq_data:
+  postgres_off_data:
 
 networks:
   nt-general-come-come:
