@@ -1,25 +1,43 @@
 package com.comecome.openfoodfacts.controllers;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
+import com.comecome.openfoodfacts.dtos.UiFilterDto;
 import com.comecome.openfoodfacts.dtos.responseDtos.newResponseDTOs.NewProductResponseDTO;
 import com.comecome.openfoodfacts.service.NewOpenFoodFactsService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/foods")
 public class NewOpenFoodFactsController {
 
-    @Autowired
-    private NewOpenFoodFactsService service;
+    private final NewOpenFoodFactsService service;
 
-    @GetMapping("/search2")
-    public List<NewProductResponseDTO> buscar(@RequestParam String query) {
-        return service.buscarProdutos(query.trim());
+    public NewOpenFoodFactsController(NewOpenFoodFactsService service) {
+        this.service = service;
     }
+
+    @PostMapping("/search/v2")
+    public ResponseEntity<List<NewProductResponseDTO>> buscar(@RequestBody SearchRequest request) {
+
+        List<NewProductResponseDTO> resultado = service.buscarProdutos(
+                request.search.query,
+                request.search.userID,
+                request.uiFilter
+        );
+
+        return ResponseEntity.ok(resultado);
+    }
+
+    record SearchRequest(
+            SearchPayload search,
+            UiFilterDto uiFilter
+    ) {}
+
+    record SearchPayload(
+            UUID userID,
+            String query
+    ) {}
 }

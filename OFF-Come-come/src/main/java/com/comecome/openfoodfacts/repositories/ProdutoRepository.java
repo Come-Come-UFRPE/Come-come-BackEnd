@@ -37,7 +37,6 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
         """, nativeQuery = true)
     List<Produto> buscarPorNomeOuMarca(@Param("query") String query);
 
-    // Versão com paginação (pra quando você quiser)
     @Query(value = """
         SELECT * FROM produtos
         WHERE LOWER(product_name) LIKE LOWER('%' || :query || '%')
@@ -59,22 +58,6 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
             @Param("size") int size,
             @Param("offset") long offset);
 
-    // Top produtos saudáveis
-    @Query(value = """
-        SELECT * FROM produtos
-        WHERE nutriscore_grade IN ('a', 'b')
-          AND product_name IS NOT NULL
-        ORDER BY 
-            CASE WHEN nutriscore_grade = 'a' THEN 1 ELSE 2 END,
-            product_name
-        LIMIT 20
-        """, nativeQuery = true)
-    List<Produto> findMelhoresOpcoesSaudaveis();
-
-    // Busca exata por código de barras (muito rápida com PK)
+    // Busca exata por código de barras
     Produto findByCode(String code);
-
-    // Contagem total (pro health)
-    @Query(value = "SELECT COUNT(*) FROM produtos", nativeQuery = true)
-    Long contarTotalProdutos();
 }

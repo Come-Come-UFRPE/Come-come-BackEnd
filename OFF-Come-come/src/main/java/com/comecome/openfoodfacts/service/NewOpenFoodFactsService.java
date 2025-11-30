@@ -57,19 +57,16 @@ public class NewOpenFoodFactsService {
         // Cria um produto temporário só pra usar seu sistema de filtros
         ProductResponseDto fakeProduct = criarProductResponseDtoTemporario(p, nutriments);
 
-        // Violações inteligentes (anamnese + filtros)
-        List<String> violations = calcularViolacoesInteligentes(fakeProduct, userId, uiFilter);
+        List<String> violations = calcularViolacoes(fakeProduct, userId, uiFilter);
 
-        // Ingredientes traduzidos com ID + TEXT
+        // Ingredientes traduzidos
         List<NewIngredientDTO> ingredientes = extrairIngredientesTraduzidos(p.getIngredientsText());
 
         // Alérgenos traduzidos
         List<String> alergenos = extrairAlergenosTraduzidos(p.getIngredientsText());
 
-        // Tags limpas
         List<String> tags = extrairTags(p.getIngredientsTags());
 
-        // Nutri-Score
         String nutriscore = p.getNutriscoreGrade() != null ? p.getNutriscoreGrade().toUpperCase() : "UNKNOWN";
 
         NewProductDetailsDTO details = new NewProductDetailsDTO(alergenos, ingredientes, nutriments, tags, nutriscore);
@@ -168,7 +165,7 @@ public class NewOpenFoodFactsService {
         return new ProductResponseDto(p.getProductName(), p.getImageUrl(), details, List.of());
     }
 
-    private List<String> calcularViolacoesInteligentes(ProductResponseDto product, UUID userId, UiFilterDto uiFilter) {
+    private List<String> calcularViolacoes(ProductResponseDto product, UUID userId, UiFilterDto uiFilter) {
         try {
             AnamnesePatchDto anamnese = userId != null
                     ? getAnamneseService.getAnamneseById(userId).blockOptional()
