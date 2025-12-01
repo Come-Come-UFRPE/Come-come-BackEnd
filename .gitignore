@@ -11,4 +11,7 @@
 **/node_modules/
 
 # Enviroment Variables
-.env
+.env*.sql
+*.dump
+src/main/resources/OFF.sql
+dump/

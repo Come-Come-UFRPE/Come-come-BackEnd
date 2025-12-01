@@ -96,7 +96,7 @@ public class OpenFoodFactsService {
                     return Mono.just(products);
                 })
                 .doOnNext(products -> {
-                    if (!isBarcode) {
+                    if (!isBarcode && search.getUserID() != null) {
                         sendToRabbit(search);
                     }
                 })
