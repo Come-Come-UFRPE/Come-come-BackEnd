@@ -121,7 +121,7 @@ public class TokenService {
 
     }
 
-    //Função que vai atuar na confirmação de senha
+    //Função que vai atuar na confirmação de email
     public void confirmEmail(String email, String otp){
         var user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
 

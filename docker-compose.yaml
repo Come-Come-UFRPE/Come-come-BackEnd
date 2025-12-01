@@ -83,6 +83,7 @@ services:
       retries: 5
     volumes:
       - ./OFF-Come-come/src/main/resources/OFF.sql:/docker-entrypoint-initdb.d/01-init-off.sql
+      - ./OFF-Come-come/src/main/resources/OFF.sql:/docker-entrypoint-initdb.d/01-init-off.sql
       - postgres_off_data:/var/lib/postgresql
 
   ms-off:
@@ -250,6 +251,15 @@ services:
       - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
       - 'SERVER_PORT=${MS_EMAIL_PORT}'
       - 'SPRING_APPLICATION_NAME=EMAIL'
+      - 'SPRING_RABBITMQ_HOST=rabbitmq'
+      - 'SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}'
+      - 'SPRING_RABBITMQ_PASSWORD=${GLOBAL_PASSWORD}'
+      - 'SPRING_MAIL_HOST=${SMTP_HOST}'
+      - 'SPRING_MAIL_PORT=${SMTP_PORT}'
+      - 'SPRING_MAIL_USERNAME=${SMTP_USER}'
+      - 'SPRING_MAIL_PASSWORD=${SMTP_PASS}'
+      - 'SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true'
+      - 'SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true'
     depends_on:
       eureka-server:
         condition: service_started

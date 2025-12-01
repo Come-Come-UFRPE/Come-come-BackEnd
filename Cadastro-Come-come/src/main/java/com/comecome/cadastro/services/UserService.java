@@ -55,6 +55,7 @@ public class UserService {
         user.setPassword(encoder.encode(user.getPassword()));
 
         User savedUser = userRepository.save(user);
+        tokenService.createNewToken(savedUser.getEmail(),TokenType.EMAIL_VERIFICATION);
 
         return savedUser;
 
