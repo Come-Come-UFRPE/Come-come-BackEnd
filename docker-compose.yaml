@@ -77,12 +77,12 @@ services:
     networks:
       - ${NETWORK_NAME}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -d ${DB_OFF_NAME} -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
     volumes:
-      - ./OFF-Come-come/src/main/resources/OFF.sql:/docker-entrypoint-initdb.d/01-init-off.sql  
+      - ./OFF-Come-come/src/main/resources/OFF.sql:/docker-entrypoint-initdb.d/01-init-off.sql
       - postgres_off_data:/var/lib/postgresql
 
   ms-off:
@@ -124,7 +124,7 @@ services:
     networks:
       - ${NETWORK_NAME}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -d ${DB_CADASTRO_NAME} -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -168,7 +168,7 @@ services:
     networks:
       - ${NETWORK_NAME}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -d ${DB_ANAMNESE_NAME} -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -209,7 +209,7 @@ services:
     networks:
       - ${NETWORK_NAME}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: [ "CMD-SHELL", "pg_isready -d ${DB_HISTORICO_NAME} -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -250,8 +250,6 @@ services:
       - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
       - 'SERVER_PORT=${MS_EMAIL_PORT}'
       - 'SPRING_APPLICATION_NAME=EMAIL'
-      - 'SPRING.MAIL.USERNAME=${MAIL_USERNAME}'
-      - 'SPRING.MAIL.PASSWORD=${MAIL_PASSWORD}'
     depends_on:
       eureka-server:
         condition: service_started
@@ -277,7 +275,7 @@ services:
     networks:
       - ${NETWORK_NAME}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: [ "CMD-SHELL", "pg_isready -d ${DB_FAVORITOS_NAME} -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -292,7 +290,7 @@ services:
       - 'SPRING_DATASOURCE_PASSWORD=${GLOBAL_PASSWORD}'
       - 'SPRING_JPA_HIBERNATE_DDL_AUTO=update'
       - 'SPRING_JPA_SHOW_SQL=true'
-      - 'SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true' 
+      - 'SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true'
       - 'SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect'
       - 'SPRING_JACKSON_SERIALIZATION_FAIL_ON_EMPTY_BEANS=false'
       - 'EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/'
