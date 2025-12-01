@@ -7,6 +7,7 @@ import com.comecome.cadastro.dtos.UserResponseDTO;
 import com.comecome.cadastro.exceptions.EmailAlreadyExistsException;
 import com.comecome.cadastro.exceptions.UserNotFoundException;
 import com.comecome.cadastro.models.User;
+import com.comecome.cadastro.models.enums.TokenType;
 import com.comecome.cadastro.repositories.UserRepository;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -26,12 +27,13 @@ public class UserService {
 
     final UserRepository userRepository;
     private final BlobStorageService blobStorageService;
+    private final TokenService tokenService;
 
 
-    public UserService(UserRepository userRepository, BlobStorageService blobStorageService){
+    public UserService(UserRepository userRepository, BlobStorageService blobStorageService, TokenService tokenService) {
         this.userRepository = userRepository;
         this.blobStorageService = blobStorageService;
-
+        this.tokenService = tokenService;
     }
 
     public List<User> getUsers(){
@@ -52,7 +54,9 @@ public class UserService {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         user.setPassword(encoder.encode(user.getPassword()));
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        return savedUser;
 
 
 

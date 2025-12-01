@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seu Token de Acesso</title>
+    <title>{{TITLE}}</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
 
@@ -14,27 +14,30 @@
 
                 <tr>
                     <td style="padding: 40px 30px 20px 30px; text-align: center; background-color: #834672; border-radius: 8px 8px 0 0;">
-                        <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Verificação de Segurança</h1>
+                        <h1 style="color: #ffffff; margin: 0; font-size: 24px;">{{TITLE}}</h1>
                     </td>
                 </tr>
 
                 <tr>
                     <td style="padding: 40px 30px;">
-                        <p style="color: #333333; font-size: 16px; line-height: 24px; margin: 0;">
+                        <p style="color: #333333; font-size: 18px; font-weight: bold; margin: 0;">
                             Olá!
                         </p>
-                        <p style="color: #666666; font-size: 16px; line-height: 24px; margin-top: 10px;">
-                            Recebemos uma solicitação de acesso para sua conta. Use o código abaixo para continuar:
+
+                        <p style="color: #666666; font-size: 16px; line-height: 24px; margin-top: 15px;">
+                            {{MESSAGE}}
                         </p>
 
-                        <div style="margin: 30px 0; text-align: center;">
-                                <span style="display: inline-block; padding: 15px 30px; background-color: #f0f0f0; color: #4e8330; font-size: 32px; font-weight: bold; letter-spacing: 5px; border-radius: 4px; border: 1px dashed #cccccc;">
+                        <div style="margin: 35px 0; text-align: center;">
+                                <span style="display: inline-block; padding: 15px 35px; background-color: #f9f9f9; color: #834672; font-size: 36px; font-weight: bold; letter-spacing: 8px; border-radius: 6px; border: 2px dashed #834672;">
                                     {{TOKEN}}
                                 </span>
                         </div>
 
                         <p style="color: #666666; font-size: 14px; line-height: 20px; margin-top: 20px;">
-                            Este código expira em breve. Se você não solicitou este código, por favor ignore este e-mail.
+                            Este código é válido por <strong>10 minutos</strong>. Não o compartilhe com ninguém.
+                            <br><br>
+                            Se você não solicitou, pode ignorar este e-mail com segurança.
                         </p>
                     </td>
                 </tr>
@@ -42,7 +45,7 @@
                 <tr>
                     <td style="padding: 20px 30px; background-color: #eeeeee; text-align: center; border-radius: 0 0 8px 8px;">
                         <p style="color: #999999; font-size: 12px; margin: 0;">
-                            © 2025 Aplicativo Come-come. Todos os direitos reservados.
+                            © 2025 Aplicativo Come-come.
                         </p>
                     </td>
                 </tr>

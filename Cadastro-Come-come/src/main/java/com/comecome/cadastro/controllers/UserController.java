@@ -4,6 +4,8 @@ import com.comecome.cadastro.dtos.UserPatchRecordDto;
 import com.comecome.cadastro.dtos.UserRecordDto;
 import com.comecome.cadastro.dtos.UserResponseDTO;
 import com.comecome.cadastro.models.User;
+import com.comecome.cadastro.models.enums.TokenType;
+import com.comecome.cadastro.services.TokenService;
 import com.comecome.cadastro.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
@@ -22,8 +24,15 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/users")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+
+    private final UserService userService;
+
+    private final TokenService emailService;
+
+    public UserController(UserService userService, TokenService tokenService) {
+        this.userService = userService;
+        this.emailService = tokenService;
+    }
 
     @GetMapping
     public ResponseEntity<List<User>> getUsers() {
@@ -44,6 +53,7 @@ public class UserController {
     public ResponseEntity<User> saveUser(@RequestBody @Valid UserRecordDto userRecordDto){
         var user = new User();
         BeanUtils.copyProperties(userRecordDto, user);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.save(user));
     }
 
