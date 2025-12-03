@@ -46,6 +46,7 @@ public class SecurityConfig {
                                                                 "reset-password/generate-token",
                                                                 "reset-password/verify-token",
                                                                 "reset-password/change-password",
+                                                                "email-confirmation/generate-token",
                                                                 "email-confirmation/confirm-email"
                                                         ).permitAll()
                                                         .anyRequest().authenticated())                                          //? Todas as requisições precisam estar autenticadas
