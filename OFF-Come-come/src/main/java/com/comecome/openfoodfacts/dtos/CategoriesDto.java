@@ -2,5 +2,5 @@ package com.comecome.openfoodfacts.dtos;
 
 import java.util.UUID;
 
-public record UserSearchDto(UUID userID) {
+public record CategoriesDto(UUID userID, String categories) {
 }

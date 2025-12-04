@@ -49,6 +49,14 @@ public class NewOpenFoodFactsService {
                 .toList();
     }
 
+    public List<NewProductResponseDTO> buscarPorCategorias(String categories, UUID userID){
+        List<Produto> produtos = produtoRepository.findByAnyCategory(categories);
+        UiFilterDto uiFilter = new UiFilterDto(Set.of(), Set.of(), Set.of(), Set.of());
+        return produtos.stream()
+                .map(p -> toNewProductResponseDTO(p, userID, uiFilter))
+                .toList();
+    }
+
     private NewProductResponseDTO toNewProductResponseDTO(Produto p, UUID userId, UiFilterDto uiFilter) {
         String nome = limparNome(p.getProductName());
         String imagem = limparImagem(p.getImageUrl());

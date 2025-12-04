@@ -1,5 +1,6 @@
 package com.comecome.openfoodfacts.controllers;
 
+import com.comecome.openfoodfacts.dtos.CategoriesDto;
 import com.comecome.openfoodfacts.dtos.UiFilterDto;
 import com.comecome.openfoodfacts.dtos.responseDtos.newResponseDTOs.NewProductResponseDTO;
 import com.comecome.openfoodfacts.service.NewOpenFoodFactsService;
@@ -31,6 +32,17 @@ public class NewOpenFoodFactsController {
         return ResponseEntity.ok(resultado);
     }
 
+    @PostMapping("/search/categories")
+    public ResponseEntity<List<NewProductResponseDTO>> buscarCategorias(@RequestBody CategoriesDto request) {
+
+        List<NewProductResponseDTO> resultado = service.buscarPorCategorias(
+                request.categories(),
+                request.userID()
+        );
+
+        return ResponseEntity.ok(resultado);
+    }
+
     record SearchRequest(
             SearchPayload search,
             UiFilterDto uiFilter
@@ -40,4 +52,5 @@ public class NewOpenFoodFactsController {
             UUID userID,
             String query
     ) {}
+
 }
