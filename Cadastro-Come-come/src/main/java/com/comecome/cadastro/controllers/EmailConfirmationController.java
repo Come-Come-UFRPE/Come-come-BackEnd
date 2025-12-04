@@ -6,12 +6,10 @@ import com.comecome.cadastro.dtos.TokenPatchDTO;
 import com.comecome.cadastro.models.enums.TokenType;
 import com.comecome.cadastro.services.TokenService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-@RestController("/email-confirmation")
+@RestController
+@RequestMapping("/email-confirmation")
 public class EmailConfirmationController {
 
     private final TokenService emailService;
