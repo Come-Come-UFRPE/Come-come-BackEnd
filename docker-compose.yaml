@@ -7,7 +7,7 @@ services:
     ports:
       - '${EUREKA_PORT}:8761'
     networks:
-      - ${NETWORK_NAME}
+      - nt-general-come-come
 
   # API Gateway
   api-gateway:
@@ -31,7 +31,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - ${NETWORK_NAME}
+      - nt-general-come-come
 
   rabbitmq:
     image: rabbitmq:3.13-management
@@ -47,7 +47,12 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
-      - ${NETWORK_NAME}
+      - nt-general-come-come
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: 'redis:latest'
@@ -57,7 +62,7 @@ services:
       - 'REDIS_PASSWORD=${GLOBAL_PASSWORD}'
     command: redis-server --requirepass ${GLOBAL_PASSWORD}
     networks:
-      - ${NETWORK_NAME}
+      - nt-general-come-come
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${GLOBAL_PASSWORD}", "--raw", "incr", "ping"]
       interval: 5s
@@ -75,14 +80,13 @@ services:
     ports:
       - '${DB_OFF_EXT_PORT}:5432'
     networks:
-      - ${NETWORK_NAME}
+      - nt-general-come-come
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d ${DB_OFF_NAME} -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
     volumes:
-      - ./OFF-Come-come/src/main/resources/OFF.sql:/docker-entrypoint-initdb.d/01-init-off.sql
       - ./OFF-Come-come/src/main/resources/OFF.sql:/docker-entrypoint-initdb.d/01-init-off.sql
       - postgres_off_data:/var/lib/postgresql
 
@@ -102,15 +106,19 @@ services:
       - 'SPRING_DATASOURCE_HIKARI_CONNECTION-TIMEOUT=300000'
       - 'SPRING_DATASOURCE_HIKARI_INITIALIZATION-FAIL-TIMEOUT=-1'
       - 'SPRING_JPA_HIBERNATE_DDL_AUTO=none'
+      - 'SPRING_RABBITMQ_HOST=rabbitmq'
+      - 'SPRING_RABBITMQ_PORT=5672'
+      - 'SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}'
+      - 'SPRING_RABBITMQ_PASSWORD=${GLOBAL_PASSWORD}'
     depends_on:
       eureka-server:
         condition: service_started
       postgres-off:
         condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
     networks:
-      - ${NETWORK_NAME}
+      - nt-general-come-come
 
   # --- MS CADASTRO ---
   postgres-cadastro:
@@ -123,7 +131,7 @@ services:
     ports:
       - '${DB_CADASTRO_EXT_PORT}:5432'
     networks:
-      - ${NETWORK_NAME}
+      - nt-general-come-come
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d ${DB_CADASTRO_NAME} -U postgres"]
       interval: 5s
@@ -146,15 +154,19 @@ services:
       - 'AZURE_STORAGE_ACCOUNT-NAME=${AZURE_ACCOUNT_NAME}'
       - 'AZURE_STORAGE_ACCOUNT-KEY=${AZURE_ACCOUNT_KEY}'
       - 'AZURE_STORAGE_CONTAINER-NAME=${AZURE_CONTAINER_NAME}'
+      - 'SPRING_RABBITMQ_HOST=rabbitmq'
+      - 'SPRING_RABBITMQ_PORT=5672'
+      - 'SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}'
+      - 'SPRING_RABBITMQ_PASSWORD=${GLOBAL_PASSWORD}'
     depends_on:
       eureka-server:
         condition: service_started
       postgres-cadastro:
         condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
     networks:
-      - ${NETWORK_NAME}
+      - nt-general-come-come
 
   # --- MS ANAMNESE ---
   postgres-anamnese:
@@ -167,7 +179,7 @@ services:
     ports:
       - '${DB_ANAMNESE_EXT_PORT}:5432'
     networks:
-      - ${NETWORK_NAME}
+      - nt-general-come-come
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d ${DB_ANAMNESE_NAME} -U postgres"]
       interval: 5s
@@ -187,15 +199,19 @@ services:
       - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
       - 'SERVER_PORT=${MS_ANAMNESE_PORT}'
       - 'SPRING_APPLICATION_NAME=ANAMNESE'
+      - 'SPRING_RABBITMQ_HOST=rabbitmq'
+      - 'SPRING_RABBITMQ_PORT=5672'
+      - 'SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}'
+      - 'SPRING_RABBITMQ_PASSWORD=${GLOBAL_PASSWORD}'
     depends_on:
       eureka-server:
         condition: service_started
       postgres-anamnese:
         condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
     networks:
-      - ${NETWORK_NAME}
+      - nt-general-come-come
 
   # --- MS HISTORICO ---
   postgres-historico:
@@ -228,17 +244,21 @@ services:
       - 'EUREKA_CLIENT_FETCH-REGISTRY=true'
       - 'SERVER_PORT=${MS_HISTORICO_PORT}'
       - 'SPRING_APPLICATION_NAME=HISTORICO'
+      - 'SPRING_RABBITMQ_HOST=rabbitmq'
+      - 'SPRING_RABBITMQ_PORT=5672'
+      - 'SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}'
+      - 'SPRING_RABBITMQ_PASSWORD=${GLOBAL_PASSWORD}'
     depends_on:
       eureka-server:
         condition: service_started
       postgres-historico:
         condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
       ms-off:
         condition: service_started
     networks:
-      - ${NETWORK_NAME}
+      - nt-general-come-come
 
   # --- MS EMAIL ---
   ms-email:
@@ -252,6 +272,7 @@ services:
       - 'SERVER_PORT=${MS_EMAIL_PORT}'
       - 'SPRING_APPLICATION_NAME=EMAIL'
       - 'SPRING_RABBITMQ_HOST=rabbitmq'
+      - 'SPRING_RABBITMQ_PORT=5672'
       - 'SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}'
       - 'SPRING_RABBITMQ_PASSWORD=${GLOBAL_PASSWORD}'
       - 'SPRING_MAIL_HOST=${SMTP_HOST}'
@@ -266,11 +287,11 @@ services:
       postgres-historico:
         condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
       ms-cadastro:
         condition: service_started
     networks:
-      - ${NETWORK_NAME}
+      - nt-general-come-come
 
   # --- MS FAVORITOS ---
   postgres-favoritos:
@@ -283,7 +304,7 @@ services:
     ports:
       - '${DB_FAVORITOS_EXT_PORT}:5432'
     networks:
-      - ${NETWORK_NAME}
+      - nt-general-come-come
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d ${DB_FAVORITOS_NAME} -U postgres" ]
       interval: 5s
@@ -314,7 +335,7 @@ services:
       postgres-favoritos:
         condition: service_healthy
     networks:
-      - ${NETWORK_NAME}
+      - nt-general-come-come
 
 volumes:
   rabbitmq_data:
