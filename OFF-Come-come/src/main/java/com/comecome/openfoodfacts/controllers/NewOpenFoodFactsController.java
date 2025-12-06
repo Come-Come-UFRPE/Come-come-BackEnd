@@ -3,6 +3,7 @@ package com.comecome.openfoodfacts.controllers;
 import com.comecome.openfoodfacts.dtos.CategoriesDto;
 import com.comecome.openfoodfacts.dtos.UiFilterDto;
 import com.comecome.openfoodfacts.dtos.responseDtos.newResponseDTOs.NewProductResponseDTO;
+import com.comecome.openfoodfacts.dtos.responseDtos.newResponseDTOs.ProdutosResponseDTO;
 import com.comecome.openfoodfacts.models.Produto;
 import com.comecome.openfoodfacts.repositories.ProdutoRepository;
 import com.comecome.openfoodfacts.service.NewOpenFoodFactsService;
@@ -26,7 +27,7 @@ public class NewOpenFoodFactsController {
     }
 
     @PostMapping("/search/v2")
-    public ResponseEntity<List<NewProductResponseDTO>> buscar(@RequestBody SearchRequest request) {
+    public ResponseEntity<ProdutosResponseDTO> buscar(@RequestBody SearchRequest request) {
 
         List<NewProductResponseDTO> resultado = service.buscarProdutos(
                 request.search.query,
@@ -34,7 +35,7 @@ public class NewOpenFoodFactsController {
                 request.uiFilter
         );
 
-        return ResponseEntity.ok(resultado);
+        return ResponseEntity.ok(new ProdutosResponseDTO(resultado));
     }
 
     @PostMapping("/search/categories")
