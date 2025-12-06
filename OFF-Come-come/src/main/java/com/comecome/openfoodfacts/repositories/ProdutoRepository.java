@@ -13,18 +13,63 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
 
     @Query(value = """
         SELECT 
-            code, url, created_t, created_datetime, last_modified_t, last_modified_datetime,
-            product_name, generic_name, quantity, packaging, origins, manufacturing_places,
-            labels, categories, categories_en, countries, countries_en, nutriments,
-            nutriscore_grade, nutriscore_score, nova_group, allergens, brands,
-            ingredients_text, ingredients_tags,
-            image_url, image_small_url, image_ingredients_url, image_ingredients_small_url,
-            image_nutrition_url, image_nutrition_small_url
+            code, 
+            url, 
+            created_t, 
+            created_datetime, 
+            last_modified_t, 
+            last_modified_datetime,
+            product_name, 
+            generic_name, 
+            quantity, 
+            packaging, 
+            origins, 
+            manufacturing_places,
+            labels, 
+            categories, 
+            categories_en, 
+            countries, 
+            countries_en,
+            countries_tags,
+            nutriments,
+            nutriscore_grade, 
+            nutriscore_score, 
+            nova_group, 
+            allergens, 
+            brands,
+            ingredients_text, 
+            ingredients_tags,
+            nutrient_levels_tags,
+            ingredients_analysis_tags,
+            image_url, 
+            image_small_url, 
+            image_ingredients_url, 
+            image_ingredients_small_url,
+            image_nutrition_url, 
+            image_nutrition_small_url
         FROM produtos
-        WHERE (LOWER(product_name) LIKE LOWER('%' || :query || '%')
-           OR LOWER(brands) LIKE LOWER('%' || :query || '%'))
-          AND (ingredients_text IS NOT NULL AND ingredients_text <> '' AND ingredients_text <> 'NaN')
-        ORDER BY
+        WHERE 
+            (
+                LOWER(product_name) LIKE LOWER('%' || :query || '%')
+                OR LOWER(brands) LIKE LOWER('%' || :query || '%')
+            )
+            AND (
+                countries_tags ILIKE '%brazil%'
+                OR countries_tags ILIKE '%brasil%'
+            )
+            AND (
+                ingredients_text IS NOT NULL 
+                AND ingredients_text <> '' 
+                AND ingredients_text <> 'NaN'
+            )
+            AND (
+                nutriments IS NOT NULL
+                AND nutriments::text <> ''
+                AND nutriments::text <> '{}'
+                AND jsonb_typeof(nutriments) = 'object'
+            )
+        ORDER BY 
+            nutriscore_grade ASC NULLS LAST,
             CASE
                 WHEN LOWER(product_name) = LOWER(:query) THEN 1
                 WHEN LOWER(product_name) ILIKE :query THEN 2
@@ -35,7 +80,9 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
             END,
             product_name
         LIMIT 20
-        """, nativeQuery = true)
+        """,
+        nativeQuery = true)
+
     List<Produto> buscarPorNomeOuMarca(@Param("query") String query);
 
     @Query(value = """
