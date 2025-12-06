@@ -42,6 +42,15 @@ public class NewOpenFoodFactsService {
     }
 
     public List<NewProductResponseDTO> buscarProdutos(String query, UUID userId, UiFilterDto uiFilter) {
+        if (isBarcode(query)) {
+            Produto produto = produtoRepository.findByCode(query);
+            if (produto != null) {
+                return List.of(toNewProductResponseDTO(produto, userId, uiFilter));
+            } else {
+                return List.of(); // Produto não encontrado
+            }
+        }
+
         List<Produto> produtos = produtoRepository.buscarPorNomeOuMarca(query.trim());
 
         return produtos.stream()
@@ -216,5 +225,17 @@ public class NewOpenFoodFactsService {
 
     private String limparImagem(String url) {
         return url != null && url.startsWith("http") && !url.contains("NaN") ? url : null;
+    }
+
+    private boolean isBarcode(String query) {
+        if (query == null || query.isBlank()) {
+            return false;
+        }
+        
+        // Apenas dígitos
+        String digitsOnly = query.replaceAll("\\s+", "");
+        
+        // EAN-8: 8 dígitos e EAN-13: 13 dígitos
+        return digitsOnly.matches("\\d+") && (digitsOnly.length() == 8 || digitsOnly.length() == 13);
     }
 }
