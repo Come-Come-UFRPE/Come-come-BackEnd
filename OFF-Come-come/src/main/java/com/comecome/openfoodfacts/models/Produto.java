@@ -75,6 +75,9 @@ public class Produto {
     @Column(name = "ingredients_tags", columnDefinition = "TEXT")
     private String ingredientsTags;
 
+    @Column(name = "ingredients_analysis_tags", columnDefinition = "TEXT")
+    private String ingredientsAnalysisTags;
+
     @Column(name = "allergens", columnDefinition = "TEXT")
     private String allergens;
 
@@ -106,6 +109,9 @@ public class Produto {
     private Integer novaGroup;
 
     // Campo JSONB com todos os valores nutricionais (ex: energy-kcal_100g, sugars_100g, etc)
+    @Column(name = "nutrient_levels_tags", columnDefinition = "TEXT")
+    private String nutrientLevels;
+
     @Column(name = "nutriments", columnDefinition = "JSONB")
     private String nutriments;
 

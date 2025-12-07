@@ -27,7 +27,6 @@ public class UiFilterService {
         List<ProductResponseDto> filtradosEAnatados = produtos.parallelStream()
             .map(produto -> {
                 if (!passaNosFiltros(produto, filters)) return null;
-
                 List<String> violacoes = new ArrayList<>(produto.violations());
                 violacoes.addAll(detectarViolacoesUi(produto, filters));
                 Set<String> unicas = new LinkedHashSet<>(violacoes);
@@ -240,7 +239,6 @@ public class UiFilterService {
         if (p.details() == null || p.details().ingredients() == null) {
             return false;
         }
-
         return p.details().ingredients().stream()
             .anyMatch(ing -> {
                 if (ing.id() == null) return false;

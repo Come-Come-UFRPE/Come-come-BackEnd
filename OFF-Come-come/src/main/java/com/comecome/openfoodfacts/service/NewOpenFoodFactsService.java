@@ -41,6 +41,11 @@ public class NewOpenFoodFactsService {
         this.uiFilterService = uiFilterService;
     }
 
+
+    /* ******************************************************
+     *                  FUNÇÕES PRINCIPAIS
+     * ******************************************************
+     */
     public List<NewProductResponseDTO> buscarProdutos(String query, UUID userId, UiFilterDto uiFilter) {
         if (isBarcode(query)) {
             Produto produto = produtoRepository.findByCode(query);
@@ -58,6 +63,7 @@ public class NewOpenFoodFactsService {
                 .toList();
     }
 
+
     public List<NewProductResponseDTO> buscarPorCategorias(String categories, UUID userID){
         List<Produto> produtos = produtoRepository.findByAnyCategory(categories);
         UiFilterDto uiFilter = new UiFilterDto(Set.of(), Set.of(), Set.of(), Set.of());
@@ -66,13 +72,15 @@ public class NewOpenFoodFactsService {
                 .toList();
     }
 
+
     private NewProductResponseDTO toNewProductResponseDTO(Produto p, UUID userId, UiFilterDto uiFilter) {
         String nome = limparNome(p.getProductName());
         String imagem = limparImagem(p.getImageUrl());
         Map<String, Object> nutriments = extrairNutriments(p.getNutriments());
+        NutrientLevelsDto nutrientLevels = extrairNutrientLevels(p.getNutrientLevels());
 
         // Cria um produto temporário só pra usar seu sistema de filtros
-        ProductResponseDto fakeProduct = criarProductResponseDtoTemporario(p, nutriments);
+        ProductResponseDto fakeProduct = criarProductResponseDtoTemporario(p, nutriments, nutrientLevels);
 
         List<String> violations = calcularViolacoes(fakeProduct, userId, uiFilter);
 
@@ -80,17 +88,23 @@ public class NewOpenFoodFactsService {
         List<NewIngredientDTO> ingredientes = extrairIngredientesTraduzidos(p.getIngredientsText());
 
         // Alérgenos traduzidos
-        List<String> alergenos = extrairAlergenosTraduzidos(p.getIngredientsText());
+        List<String> alergenos = extrairAlergenosTraduzidos(p.getAllergens());
 
-        List<String> tags = extrairTags(p.getIngredientsTags());
+        List<String> tags = extrairTags(p.getIngredientsAnalysisTags());
 
         String nutriscore = p.getNutriscoreGrade() != null ? p.getNutriscoreGrade().toUpperCase() : "UNKNOWN";
 
-        NewProductDetailsDTO details = new NewProductDetailsDTO(alergenos, ingredientes, nutriments, tags, nutriscore);
+        NewProductDetailsDTO details = new NewProductDetailsDTO(alergenos, ingredientes, nutriments, nutrientLevels, tags, nutriscore);
 
         return new NewProductResponseDTO(nome, imagem, p.getCode(), details, violations);
     }
 
+
+
+    /* ******************************************************
+     *          LIMPEZA E TRATAMENTO DE DADOS BRUTOS
+     * ******************************************************
+     */
     private List<NewIngredientDTO> extrairIngredientesTraduzidos(String texto) {
         if (texto == null || texto.isBlank() || "NaN".equalsIgnoreCase(texto.trim())) {
             return List.of();
@@ -109,11 +123,13 @@ public class NewOpenFoodFactsService {
                 .toList();
     }
 
+
     private String removerPorcentagemEParentese(String s) {
         return s.replaceAll("\\s*\\(?\\d+[.,]?\\d*\\s*%?\\)?", "")
                 .replaceAll("[()]", "")
                 .trim();
     }
+
 
     private NewIngredientDTO traduzirComIdOriginal(String original) {
         String idLimpo = original.replaceAll("[^a-zà-ú\\s-]", "").trim();
@@ -129,21 +145,29 @@ public class NewOpenFoodFactsService {
 
         String idFinal = idLimpo.isBlank() ? "unknown" : idLimpo.replaceAll("\\s+", "-");
 
-        return new NewIngredientDTO(idFinal, traduzido);
+        return new NewIngredientDTO(original, traduzido);
     }
 
+
+
+    /* ******************************************************
+     *                  EXTRAÇÃO DE DADOS
+     * ******************************************************
+     */
     private List<String> extrairAlergenosTraduzidos(String texto) {
-        if (texto == null || texto.isBlank()) return List.of();
+        if (texto == null || texto.isBlank() || "NaN".equals(texto)) return List.of();
         String brutos = Arrays.stream(texto.toLowerCase().split("[,;\\.]"))
                 .map(String::trim)
-                .filter(s -> s.contains("leite") || s.contains("soja") || s.contains("ovo") ||
-                            s.contains("amendoim") || s.contains("trigo") || s.contains("castanha") ||
-                            s.contains("glúten") || s.contains("pescado") || s.contains("lactose"))
+                .filter(s -> s.contains("en:milk") || s.contains("en:soybeans") || s.contains("en:egg") ||
+                            s.contains("en:nuts") || s.contains("en:wheat") || s.contains("en:hazelnut") ||
+                            s.contains("en:gluten") || s.contains("en:seafood") || s.contains("en:lactose"))
                 .distinct()
                 .collect(Collectors.joining(","));
 
-        return brutos.isEmpty() ? List.of() : allergenTranslationService.translateAllergen(brutos);
+
+        return allergenTranslationService.translateAllergen(brutos);
     }
+
 
     private List<String> extrairTags(String tags) {
         if (tags == null || tags.isBlank() || "NaN".equals(tags)) return List.of();
@@ -153,6 +177,7 @@ public class NewOpenFoodFactsService {
                 .limit(12)
                 .toList();
     }
+
 
     private Map<String, Object> extrairNutriments(String json) {
         if (json == null || json.isBlank() || "unknown".equals(json)) return Map.of();
@@ -170,23 +195,55 @@ public class NewOpenFoodFactsService {
         }
     }
 
-    private ProductResponseDto criarProductResponseDtoTemporario(Produto p, Map<String, Object> nutriments) {
-        ProductDetailsDto details = new ProductDetailsDto(
-                List.of(),
-                List.of(),
-                null,
-                nutriments,
-                extrairTags(p.getIngredientsTags()),
-                p.getNutriscoreGrade()
-        );
-        return new ProductResponseDto(p.getProductName(), p.getImageUrl(), details, List.of());
+
+    public NutrientLevelsDto extrairNutrientLevels(String input) {
+        String fat = "unknown";
+        String salt = "unknown";
+        String saturatedFat = "unknown";
+        String sugars = "unknown";
+
+        if (input == null || input.trim().isEmpty()) {
+            return new NutrientLevelsDto(fat, salt, saturatedFat, sugars);
+        }
+
+
+        String[] items = input.split(",");
+
+        for (String item : items) {
+            item = item.trim();
+
+            if (item.startsWith("en:")) {
+                item = item.substring(3);
+            }
+
+            if (item.contains("-in-")) {
+                String[] parts = item.split("-in-");
+                if (parts.length == 2) {
+                    String nutrient = parts[0];
+                    String level = parts[1].replace("-quantity", "");
+                    switch (nutrient) {
+                        case "fat" -> fat = level;
+                        case "salt" -> salt = level;
+                        case "saturated-fat" -> saturatedFat = level;
+                        case "sugars" -> sugars = level;
+                    }
+                }
+            }
+        }
+        return new NutrientLevelsDto(fat, salt, saturatedFat, sugars);
     }
 
+
+
+    /* ******************************************************
+     *                  CÁLCULO DE VIOLAÇÕES
+     * ******************************************************
+     */
     private List<String> calcularViolacoes(ProductResponseDto product, UUID userId, UiFilterDto uiFilter) {
         try {
             AnamnesePatchDto anamnese = userId != null
                     ? getAnamneseService.getAnamneseById(userId).blockOptional()
-                        .orElse(new AnamnesePatchDto(null, Set.of(), Set.of(), Set.of()))
+                    .orElse(new AnamnesePatchDto(null, Set.of(), Set.of(), Set.of()))
                     : new AnamnesePatchDto(null, Set.of(), Set.of(), Set.of());
 
             Map<String, Object> passo1 = filteringResponseService.filteringResponse(
@@ -207,6 +264,36 @@ public class NewOpenFoodFactsService {
         } catch (Exception e) {
             return List.of();
         }
+    }
+
+
+
+    /* ******************************************************
+     *                  FUNÇÕES AUXILIARES
+     * ******************************************************
+     */
+    private ProductResponseDto criarProductResponseDtoTemporario(Produto p, Map<String, Object> nutriments, NutrientLevelsDto nutrients) {
+        List<NewIngredientDTO> dto = extrairIngredientesTraduzidos(p.getIngredientsTags());
+        List<IngredientDto> ingredientes =
+                dto.stream()
+                        .map(n -> new IngredientDto(
+                                n.id(),          // id
+                                null,            // percent_estimate
+                                n.text(),        // text
+                                null,            // vegan
+                                null,            // vegetarian
+                                List.of()        // ingredients (lista vazia ou null)
+                        ))
+                        .toList();
+        ProductDetailsDto details = new ProductDetailsDto(
+                List.of(),
+                ingredientes,
+                nutrients,
+                nutriments,
+                extrairTags(p.getIngredientsTags()),
+                p.getNutriscoreGrade()
+        );
+        return new ProductResponseDto(p.getProductName(), p.getImageUrl(), details, List.of());
     }
 
     private boolean temFiltro(UiFilterDto f) {
