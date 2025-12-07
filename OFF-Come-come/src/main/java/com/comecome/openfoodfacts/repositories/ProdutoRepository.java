@@ -130,45 +130,16 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
      * @param categories Lista de categorias (ex: ["snacks", "beverages"])
      */
     @Query(value = """
-        SELECT
-            code, url, 
-            created_t, 
-            created_datetime, 
-            last_modified_t, 
-            last_modified_datetime,
-            product_name, 
-            generic_name, 
-            quantity, 
-            packaging, 
-            origins, 
-            manufacturing_places,
-            labels, 
-            categories, 
-            categories_en, 
-            countries, 
-            countries_en,
-            countries_tags,
-            nutriments,
-            nutriscore_grade, 
-            nutriscore_score, 
-            nova_group, 
-            allergens, 
-            brands,
-            ingredients_text,
-            ingredients_tags,
-            nutrient_levels_tags,
-            ingredients_analysis_tags,
-            image_url, 
-            image_small_url, 
-            image_ingredients_url, 
-            image_ingredients_small_url,
-            image_nutrition_url, 
-            image_nutrition_small_url
+        SELECT *
         FROM produtos
         WHERE EXISTS (
             SELECT 1
             FROM unnest(string_to_array(:categories, ',')) AS cat
             WHERE LOWER(categories_en) LIKE LOWER(CONCAT('%', cat, '%'))
+        )
+        AND (
+            countries_tags ILIKE '%brazil%'
+            OR countries_tags ILIKE '%brasil%'
         )
           AND (ingredients_text IS NOT NULL AND ingredients_text <> '' AND ingredients_text <> 'NaN')
           
@@ -180,5 +151,6 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
         ORDER BY nutriscore_score ASC NULLS LAST
         LIMIT 50
         """, nativeQuery = true)
-    List<Produto> findByAnyCategory(@Param("categories") String categories);
+List<Produto> findByAnyCategory(@Param("categories") String categories);
+
 }

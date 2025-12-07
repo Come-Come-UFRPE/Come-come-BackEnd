@@ -115,27 +115,12 @@ public class Produto {
     @Column(name = "nutriments", columnDefinition = "JSONB")
     private String nutriments;
 
-    // === Getters manuais (se não quiser usar Lombok) ===
-    // (Com Lombok @Getter/@Setter você pode apagar todos esses)
+    @Column(name = "countries_tags", columnDefinition = "TEXT")
+    private String countriesTags;
 
-    /*
-    public String getCode() { return code; }
-    public void setCode(String code) { this.code = code; }
-    public String getProductName() { return productName; }
-    public void setProductName(String productName) { this.productName = productName; }
-    public String getBrands() { return brands; }
-    public void setBrands(String brands) { this.brands = brands; }
-    public String getImageUrl() { return imageUrl; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-    public String getNutriscoreGrade() { return nutriscoreGrade; }
-    public void setNutriscoreGrade(String nutriscoreGrade) { this.nutriscoreGrade = nutriscoreGrade; }
-    public String getIngredientsText() { return ingredientsText; }
-    public void setIngredientsText(String ingredientsText) { this.ingredientsText = ingredientsText; }
-    public String getIngredientsTags() { return ingredientsTags; }
-    public void setIngredientsTags(String ingredientsTags) { this.ingredientsTags = ingredientsTags; }
-    public String getNutriments() { return nutriments; }
-    public void setNutriments(String nutriments) { this.nutriments = nutriments; }
-    public Integer getNovaGroup() { return novaGroup; }
-    public void setNovaGroup(Integer novaGroup) { this.novaGroup = novaGroup; }
-    */
+    @Column(name = "nutrient_levels_tags", columnDefinition = "TEXT")
+    private String nutrientLevelsTags;
+
+    @Column(name = "ingredients_analysis_tags", columnDefinition = "TEXT")
+    private String ingredientsAnalysisTags;
 }
