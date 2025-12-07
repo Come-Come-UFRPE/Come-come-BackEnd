@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.comecome.openfoodfacts.dtos.SuggestionsDTO;
+import com.comecome.openfoodfacts.dtos.responseDtos.newResponseDTOs.ProdutosResponseDTO;
 import com.comecome.openfoodfacts.models.Produto;
 import com.comecome.openfoodfacts.service.SuggestionsService;
 
@@ -25,10 +26,10 @@ public class HealthySuggestionsController {
     }
     
     @PostMapping("/suggestions")
-    public ResponseEntity<List<Produto>> healthySuggestions(@RequestBody SuggestionsDTO sugestao) {
+    public ResponseEntity<ProdutosResponseDTO> healthySuggestions(@RequestBody SuggestionsDTO sugestao) {
         String query = sugestao.sugestao();
         
-        List<Produto> response = suggestionsService.getSugestoes(query);
+        ProdutosResponseDTO response = suggestionsService.getSugestoes(query);
 
         return ResponseEntity.ok(response);
     }
