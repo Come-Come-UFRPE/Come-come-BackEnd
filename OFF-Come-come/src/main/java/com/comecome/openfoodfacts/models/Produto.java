@@ -118,9 +118,4 @@ public class Produto {
     @Column(name = "countries_tags", columnDefinition = "TEXT")
     private String countriesTags;
 
-    @Column(name = "nutrient_levels_tags", columnDefinition = "TEXT")
-    private String nutrientLevelsTags;
-
-    @Column(name = "ingredients_analysis_tags", columnDefinition = "TEXT")
-    private String ingredientsAnalysisTags;
 }

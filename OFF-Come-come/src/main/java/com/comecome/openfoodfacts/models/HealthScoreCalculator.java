@@ -23,7 +23,7 @@ public class HealthScoreCalculator {
         score += 0.3 * novaNormalized;
 
         // 3. nutrient_levels_tags
-        score += 0.15 * nutrientPenalty(toList(p.getNutrientLevelsTags()));
+        score += 0.15 * nutrientPenalty(toList(p.getNutrientLevels()));
 
         // 4. ingredients_analysis_tags
         score += 0.05 * ingredientPenalty(toList(p.getIngredientsAnalysisTags()));
