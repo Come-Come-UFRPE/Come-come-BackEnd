@@ -39,14 +39,14 @@ public class NewOpenFoodFactsController {
     }
 
     @PostMapping("/search/categories")
-    public ResponseEntity<List<NewProductResponseDTO>> buscarCategorias(@RequestBody CategoriesDto request) {
+    public ResponseEntity<ProdutosResponseDTO> buscarCategorias(@RequestBody CategoriesDto request) {
 
         List<NewProductResponseDTO> resultado = service.buscarPorCategorias(
                 request.categories(),
                 request.userID()
         );
 
-        return ResponseEntity.ok(resultado);
+        return ResponseEntity.ok(new ProdutosResponseDTO(resultado));
     }
     @PostMapping("/search/v2/test/query")
     public ResponseEntity<List<Produto>> queryDb(@RequestBody String query) {
