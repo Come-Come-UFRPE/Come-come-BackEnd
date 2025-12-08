@@ -1,5 +1,6 @@
 package com.backend.favorite.controllers;
 
+import com.backend.favorite.dtos.DeleteFavoriteDTO;
 import com.backend.favorite.dtos.FavoriteDTO;
 import com.backend.favorite.models.Favorite;
 import com.backend.favorite.service.FavoriteService;
@@ -23,10 +24,9 @@ public class FavoriteController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Favorite> deleteFavoriteByIdAndCategory(FavoriteDTO favoriteDto) {
-
+    public ResponseEntity<?> deleteFavoriteByIdAndCategory(@RequestBody DeleteFavoriteDTO favoriteDto) {
         favoriteService.deleteFavoriteByProductIdAndCategory(favoriteDto);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping

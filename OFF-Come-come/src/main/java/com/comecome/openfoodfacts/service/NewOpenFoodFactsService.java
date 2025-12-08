@@ -1,6 +1,7 @@
 package com.comecome.openfoodfacts.service;
 
 import com.comecome.openfoodfacts.dtos.AnamnesePatchDto;
+import com.comecome.openfoodfacts.dtos.AnamneseSearchDTO;
 import com.comecome.openfoodfacts.dtos.UiFilterDto;
 import com.comecome.openfoodfacts.dtos.responseDtos.*;
 import com.comecome.openfoodfacts.dtos.responseDtos.newResponseDTOs.*;
@@ -8,16 +9,22 @@ import com.comecome.openfoodfacts.models.Produto;
 import com.comecome.openfoodfacts.repositories.ProdutoRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class NewOpenFoodFactsService {
 
+    private final static String historico = "fila-historico";
+
     private final ProdutoRepository produtoRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RabbitTemplate rabbitTemplate;
+
 
     // Seus serviços poderosos
     private final FilteringResponseService filteringResponseService;
@@ -32,13 +39,15 @@ public class NewOpenFoodFactsService {
             GetAnamneseService getAnamneseService,
             IngredientTranslationService ingredientTranslationService,
             AllergenTranslationService allergenTranslationService,
-            UiFilterService uiFilterService) {
+            UiFilterService uiFilterService,
+            RabbitTemplate rabbitTemplate) {
         this.produtoRepository = produtoRepository;
         this.filteringResponseService = filteringResponseService;
         this.getAnamneseService = getAnamneseService;
         this.ingredientTranslationService = ingredientTranslationService;
         this.allergenTranslationService = allergenTranslationService;
         this.uiFilterService = uiFilterService;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
 
@@ -55,8 +64,9 @@ public class NewOpenFoodFactsService {
                 return List.of(); // Produto não encontrado
             }
         }
-
+        AnamneseSearchDTO sendHistorico = new AnamneseSearchDTO(userId,query);
         List<Produto> produtos = produtoRepository.buscarPorNomeOuMarca(query.trim());
+        sendToRabbit(sendHistorico);
 
         return produtos.stream()
                 .map(p -> toNewProductResponseDTO(p, userId, uiFilter))
@@ -324,5 +334,14 @@ public class NewOpenFoodFactsService {
         
         // EAN-8: 8 dígitos e EAN-13: 13 dígitos
         return digitsOnly.matches("\\d+") && (digitsOnly.length() == 8 || digitsOnly.length() == 13);
+    }
+
+    private void sendToRabbit(AnamneseSearchDTO search) {
+        AnamneseResponseDTO response = new AnamneseResponseDTO(
+                search.getUserID(),
+                search.getQuery(),
+                LocalDateTime.now()
+        );
+        rabbitTemplate.convertAndSend(historico, response);
     }
 }

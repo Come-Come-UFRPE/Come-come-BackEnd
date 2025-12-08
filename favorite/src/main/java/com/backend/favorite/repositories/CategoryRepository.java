@@ -11,4 +11,5 @@ import java.util.UUID;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
     List<Category> findCategoryByOwnerId(UUID id);
+    Optional<Category> findByCategoryNameAndOwnerId(String categoryName, UUID ownerId);
 }
