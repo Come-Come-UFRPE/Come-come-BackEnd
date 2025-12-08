@@ -143,6 +143,8 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
         )
           AND (ingredients_text IS NOT NULL AND ingredients_text <> '' AND ingredients_text <> 'NaN')
           
+          AND (image_url IS NOT NULL AND image_url <> '' AND image_url <> 'NaN')
+          
           AND (
                 countries_tags ILIKE '%brazil%'
                 OR countries_tags ILIKE '%brasil%'
