@@ -508,7 +508,7 @@ public class FilteringResponseService {
         final double MIN_PROTEIN = 10.0;
 
         //Carboidratos complexos
-        final double MIN_CARBS = 30.0;
+        final double MIN_CARBS = 10.0;
 
 
         // Retirar dados da tabela
