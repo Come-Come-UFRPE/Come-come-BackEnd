@@ -1,5 +1,6 @@
 package com.comecome.cadastro.services;
 
+import com.comecome.cadastro.exceptions.UserNotFoundException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,9 +19,9 @@ public class MyUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) throws UserNotFoundException {
 
-        var user = userRepository.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));         //? Busca o usuário pelo email no repositório
+        var user = userRepository.findByEmail(username).orElseThrow(UserNotFoundException::new);         //? Busca o usuário pelo email no repositório
 
         return User.builder()                                                                                                       //? Monta o UserDetails com as informações do usuário
                 .username(user.getEmail())

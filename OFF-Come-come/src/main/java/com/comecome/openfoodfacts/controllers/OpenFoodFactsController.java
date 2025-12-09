@@ -1,13 +1,18 @@
 package com.comecome.openfoodfacts.controllers;
 
+import com.comecome.openfoodfacts.dtos.AnamneseSearchDTO;
+import com.comecome.openfoodfacts.dtos.ComparePatchDTO;
+import com.comecome.openfoodfacts.dtos.responseDtos.ComparingResponseDTO;
+import com.comecome.openfoodfacts.service.ComparingService;
+import com.comecome.openfoodfacts.dtos.FilteringDto;
+import com.comecome.openfoodfacts.dtos.UiFilterDto;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.comecome.openfoodfacts.service.OpenFoodFactsService;
 
+import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -17,13 +22,30 @@ public class OpenFoodFactsController {
 
     private final OpenFoodFactsService openFoodFactsService;
 
-    public OpenFoodFactsController(OpenFoodFactsService openFoodFactsService) {
+    private final ComparingService comparingService;
+
+    public OpenFoodFactsController(OpenFoodFactsService openFoodFactsService, ComparingService comparingService) {
         this.openFoodFactsService = openFoodFactsService;
+        this.comparingService = comparingService;
     }
 
-    @GetMapping("/search")
-    public Mono<ResponseEntity<?>> searchProducts(@RequestParam String query) {
-        return openFoodFactsService.searchProducts(query,"en:brazil").map(ResponseEntity::ok);
+    @PostMapping("/search")
+    public Mono<ResponseEntity<?>> searchProducts(@Valid @RequestBody FilteringDto filteringDto) {
+        //* Separa os DTOs dos filtros
+        AnamneseSearchDTO search = filteringDto.search();
+        UiFilterDto uiFilter = filteringDto.uiFilter(); // pode ser null
+
+        return openFoodFactsService.searchProducts(
+            search,
+            "en:brazil",
+            search.getUserID(),
+            uiFilter
+            ).map(ResponseEntity::ok);
     }
 
+    @PostMapping("/compare")
+    public Mono<ResponseEntity<ComparingResponseDTO>> compareProducts(@RequestBody ComparePatchDTO compare){
+        return comparingService.comparingResponse(compare)
+                .map(ResponseEntity::ok);
+    }
 }

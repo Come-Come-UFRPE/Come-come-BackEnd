@@ -1,0 +1,18 @@
+# IDE JetBrains
+**/.idea/
+**/*.iml
+**/*.iws
+**/*.ipr
+
+# Build/output
+**/out/
+**/build/
+**/target/
+**/node_modules/
+
+# Enviroment Variables
+.env*
+.sql
+*.dump
+OFF-Come-come/src/main/resources/OFF.sql
+dump/

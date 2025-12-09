@@ -6,19 +6,23 @@ import java.util.UUID;
 
 public record UserResponseDTO(UUID id,
                               String name,
+                              String profile,
                               String email,
                               String cidade,
                               String estado,
-                              int idade) {
+                              int idade,
+                              boolean fezAnamnese) {
 
     public UserResponseDTO(User user) {
         this(
                 user.getUserId(),
                 user.getName(),
+                user.getProfile(),
                 user.getEmail(),
                 user.getCidade(),
                 user.getEstado(),
-                user.getIdade()
+                user.getIdade(),
+                user.isFezAnamnese()
         );
     }
 }

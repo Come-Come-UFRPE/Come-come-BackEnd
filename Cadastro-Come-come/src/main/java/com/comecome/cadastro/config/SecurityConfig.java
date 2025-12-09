@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.comecome.cadastro.config.filters.JWTEntryPoint;
 import com.comecome.cadastro.config.filters.JWTFilter;
 import com.comecome.cadastro.services.MyUserDetailsService;
 
@@ -25,6 +26,9 @@ public class SecurityConfig {
 
     @Autowired
     private JWTFilter jwtFilter;
+
+    @Autowired
+    private JWTEntryPoint jwtEntryPoint;
     
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -33,10 +37,23 @@ public class SecurityConfig {
                     .authorizeHttpRequests(auth -> auth
                                                         .requestMatchers(HttpMethod.POST, "/users", "/login").permitAll()       //? Permite requisições POST para /users sem autenticação
                                                         .requestMatchers(HttpMethod.POST, "/users/register").permitAll()       //? Permite requisições POST para /users sem autenticação
+                                                        .requestMatchers(                                                        // ? Permissão do Swagger
+                                                                "/swagger-ui.html",
+                                                                "/swagger-ui/**",
+                                                                "/v3/api-docs/**"
+                                                        ).permitAll()
+                                                        .requestMatchers(                                                        // ? Permissão do Swagger
+                                                                "reset-password/generate-token",
+                                                                "reset-password/verify-token",
+                                                                "reset-password/change-password",
+                                                                "email-confirmation/generate-token",
+                                                                "email-confirmation/confirm-email"
+                                                        ).permitAll()
                                                         .anyRequest().authenticated())                                          //? Todas as requisições precisam estar autenticadas
                     .httpBasic(Customizer.withDefaults())                                                                       //? Habilita a autenticação HTTP Basic
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))               //? Configura a política de criação de sessão como STATELESS (sem estado)
                     .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                    .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtEntryPoint))
                     .build();
     }
 
