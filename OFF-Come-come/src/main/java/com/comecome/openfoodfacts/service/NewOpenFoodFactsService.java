@@ -191,7 +191,9 @@ public class NewOpenFoodFactsService {
 
 
     private Map<String, Object> extrairNutriments(String json) {
-        if (json == null || json.isBlank() || "unknown".equals(json)) return Map.of();
+        if (json == null || json.isBlank() || "unknown".equals(json))
+            return new HashMap<>();
+
         try {
             JsonNode node = objectMapper.readTree(json);
             Map<String, Object> map = new HashMap<>();
@@ -202,9 +204,10 @@ public class NewOpenFoodFactsService {
             });
             return map;
         } catch (Exception e) {
-            return Map.of();
+            return new HashMap<>();
         }
     }
+
 
 
     public NutrientLevelsDto extrairNutrientLevels(String input) {
