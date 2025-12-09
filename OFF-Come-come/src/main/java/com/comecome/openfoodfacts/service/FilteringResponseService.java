@@ -121,11 +121,11 @@ public class FilteringResponseService {
     private List<String> checkHealthConditionViolation(ProductResponseDto produto, HealthCondition condition){
 
         String violationTag = switch (condition) {
-            case HIPERTENSAO -> checkHypertension(produto) ? "VIOLACAO_HIPERTENSAO" : null;
-            case DIABETES -> checkDiabetes(produto) ? "VIOLACAO_DIABETES" : null;
-            case SOBREPESO -> checkOverweight(produto) ? "VIOLACAO_SOBREPESO" : null;
-            case DOENCA_CARDIOVASCULAR -> checkCardiovascular(produto) ? "VIOLACAO_CARDIOVASCULAR" : null;
-            case ANEMIA -> checkAnemia(produto) ? "VIOLACAO_ANEMIA" : null;
+            case HIPERTENSAO -> checkHypertension(produto) ? null: "VIOLACAO_HIPERTENSAO";
+            case DIABETES -> checkDiabetes(produto) ? null : "VIOLACAO_DIABETES";
+            case SOBREPESO -> checkOverweight(produto) ? null : "VIOLACAO_SOBREPESO";
+            case DOENCA_CARDIOVASCULAR -> checkCardiovascular(produto) ? null : "VIOLACAO_CARDIOVASCULAR";
+            case ANEMIA -> checkAnemia(produto) ? null :"VIOLACAO_ANEMIA";
             default -> null;
         };
 
@@ -134,11 +134,11 @@ public class FilteringResponseService {
 
     private List<String> checkObjectiveViolation(ProductResponseDto produto, Objective objective){
         String violationTag = switch (objective) {
-            case PERDA_CONTROLE_PESO -> checkWeightLoss(produto) ? "VIOLACAO_PERDA_CONTROLE_PESO" : null;
-            case GANHO_MASSA_MUSCULAR -> checkMassGain(produto) ? "VIOLACAO_GANHO_MASSA_MUSCULAR" : null;
-            case MELHORA_SAUDE_INTESTINAL -> checkGutHealth(produto) ? "VIOLACAO_MELHORA_SAUDE_INTESTINAL" : null;
-            case FORTALECIMENTO_SISTEMA_IMUNOLOGICO -> checkImmuneSystem(produto) ? "VIOLACAO_FORTALECIMENTO_SISTEMA_IMUNOLOGICO" : null;
-            case HABITOS_SAUDAVEIS -> checkHealthyHabits(produto) ? "VIOLACAO_HABITOS_SAUDAVEIS" : null;
+            case PERDA_CONTROLE_PESO -> checkWeightLoss(produto) ? null : "VIOLACAO_PERDA_CONTROLE_PESO";
+            case GANHO_MASSA_MUSCULAR -> checkMassGain(produto) ? null : "VIOLACAO_GANHO_MASSA_MUSCULAR";
+            case MELHORA_SAUDE_INTESTINAL -> checkGutHealth(produto) ? null : "VIOLACAO_MELHORA_SAUDE_INTESTINAL";
+            case FORTALECIMENTO_SISTEMA_IMUNOLOGICO -> checkImmuneSystem(produto) ? null : "VIOLACAO_FORTALECIMENTO_SISTEMA_IMUNOLOGICO";
+            case HABITOS_SAUDAVEIS -> checkHealthyHabits(produto) ? null : "VIOLACAO_HABITOS_SAUDAVEIS";
             default -> null;
         };
 
@@ -227,11 +227,8 @@ public class FilteringResponseService {
                         name.contains("en:almond")
         );
 
-        if (!containsGoodFat){
-            return false;
-        }
 
-        if (carbs == null || carbs > MAX_CARBS) {
+        if (carbs == null || carbs > MAX_CARBS || !containsGoodFat) {
             return false;
         }
 
@@ -254,13 +251,13 @@ public class FilteringResponseService {
     private boolean checkVegetarian(ProductResponseDto produto){
         List<String> tags = produto.details().ingredient_tags();
 
-        return tags.contains("en:non-vegetarian");
+        return !tags.contains("non-vegetarian");
     }
 
     private boolean checkVegan(ProductResponseDto produto){
         List<String> tags = produto.details().ingredient_tags();
 
-        return tags.contains("en:non-vegan");
+        return !tags.contains("non-vegan");
     }
 
     private boolean checkDash(ProductResponseDto produto) {
@@ -459,7 +456,7 @@ public class FilteringResponseService {
     }
 
     private boolean checkOverweight(ProductResponseDto produto){
-        return false;
+        return true;
     }
 
     private boolean checkCardiovascular(ProductResponseDto produto){
@@ -525,8 +522,7 @@ public class FilteringResponseService {
             return false;
         }
 
-
-        if (protein == null ||  protein < MIN_PROTEIN){
+        if (protein == null || protein < MIN_PROTEIN) {
             return false;
         }
 
@@ -545,17 +541,18 @@ public class FilteringResponseService {
     }
 
     private boolean checkImmuneSystem(ProductResponseDto produto){
-        return false;
+        return true;
     }
 
     private boolean checkHealthyHabits(ProductResponseDto produto){
         Map<String, Object> nutriments = produto.details().nutriments();
 
-        Double novaGroup = getNutrimentValue(nutriments, "nova-group"); // coloca "nova-group" aí pfv
+        Double novaGroup = getNutrimentValue(nutriments, "nova_group"); // coloca "nova-group" aí pfv
 
         //Observa o Nova Group (Alimentos ultra-processados)
         if (novaGroup != null){
-            return novaGroup.intValue() == 1 || novaGroup.intValue() == 2;
+            System.out.println(novaGroup.intValue());
+            return novaGroup.intValue() == 1 || novaGroup.intValue() == 2 || novaGroup.intValue() == 3;
         }
 
         return false;

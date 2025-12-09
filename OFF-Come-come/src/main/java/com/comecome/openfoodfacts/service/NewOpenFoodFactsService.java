@@ -90,7 +90,8 @@ public class NewOpenFoodFactsService {
         NutrientLevelsDto nutrientLevels = extrairNutrientLevels(p.getNutrientLevels());
 
         // Cria um produto temporário só pra usar seu sistema de filtros
-        ProductResponseDto fakeProduct = criarProductResponseDtoTemporario(p, nutriments, nutrientLevels);
+        Map<String, Object> nutrimentsFake = extrairNutriments(p.getNutriments());
+        ProductResponseDto fakeProduct = criarProductResponseDtoTemporario(p, nutrimentsFake, nutrientLevels);
 
         List<String> violations = calcularViolacoes(fakeProduct, userId, uiFilter);
 
@@ -284,6 +285,11 @@ public class NewOpenFoodFactsService {
      */
     private ProductResponseDto criarProductResponseDtoTemporario(Produto p, Map<String, Object> nutriments, NutrientLevelsDto nutrients) {
         List<NewIngredientDTO> dto = extrairIngredientesTraduzidos(p.getIngredientsTags());
+
+        if (p.getNovaGroup() != null) {
+            nutriments.put("nova_group", p.getNovaGroup());
+        }
+
         List<IngredientDto> ingredientes =
                 dto.stream()
                         .map(n -> new IngredientDto(
@@ -300,9 +306,11 @@ public class NewOpenFoodFactsService {
                 ingredientes,
                 nutrients,
                 nutriments,
-                extrairTags(p.getIngredientsTags()),
+                extrairTags(p.getIngredientsAnalysisTags()),
                 p.getNutriscoreGrade()
         );
+
+        System.out.println(details);
         return new ProductResponseDto(p.getProductName(), p.getImageUrl(), details, List.of());
     }
 
