@@ -219,20 +219,13 @@ public class FilteringResponseService {
         Double carbs = getNutrimentValue(nutriments, "carbohydrates_100g");
         Double protein = getNutrimentValue(nutriments, "proteins_100g");
 
-        //Se contém gorduras insaturadas
-        boolean containsGoodFat = ingredientNames.stream().anyMatch(name ->
-                name.contains("en:oil") ||
-                        name.contains("en:olive") ||
-                        name.contains("en:nuts") ||
-                        name.contains("en:almond")
-        );
 
 
-        if (carbs == null || carbs > MAX_CARBS || !containsGoodFat) {
+        if (carbs != null && carbs > MAX_CARBS) {
             return false;
         }
 
-        if (protein == null ||  protein < MIN_PROTEIN){
+        if (protein != null &&  protein < MIN_PROTEIN){
             return false;
         }
 
@@ -245,7 +238,11 @@ public class FilteringResponseService {
         final double MIN_FIBER = 6.0;
         Double fiber = getNutrimentValue(nutriments, "fiber_100g");
 
-        return (fiber != null && fiber >= MIN_FIBER);
+        if (fiber != null && fiber < MIN_FIBER){
+            return false;
+        }
+
+        return true;
     }
 
     private boolean checkVegetarian(ProductResponseDto produto){
@@ -434,7 +431,7 @@ public class FilteringResponseService {
         final double MAX_SODIUM = 0.08;
         Double sodium = getNutrimentValue(nutriments, "sodium_100g");
 
-        if (sodium == null || sodium > MAX_SODIUM){
+        if (sodium != null && sodium > MAX_SODIUM){
             return false;
         }
 
@@ -448,7 +445,7 @@ public class FilteringResponseService {
         final double MAX_CARBS = 5.0;
         Double carbs = getNutrimentValue(nutriments, "carbohydrates_100g");
 
-        if (carbs == null ||carbs > MAX_CARBS){
+        if (carbs != null && carbs > MAX_CARBS){
             return false;
         }
 
@@ -467,7 +464,7 @@ public class FilteringResponseService {
         final double MAX_SODIUM = 0.08;
         Double sodium = getNutrimentValue(nutriments, "sodium_100g");
 
-        if (sodium == null || sodium > MAX_SODIUM){
+        if (sodium != null && sodium > MAX_SODIUM){
             return false;
         }
 
@@ -480,7 +477,7 @@ public class FilteringResponseService {
     }
 
     private boolean checkAnemia(ProductResponseDto produto){
-        return false;
+        return true;
     }
 
 
@@ -518,11 +515,11 @@ public class FilteringResponseService {
         Double carbs = getNutrimentValue(nutriments, "carbohydrates_100g");
         Double protein = getNutrimentValue(nutriments, "proteins_100g");
 
-        if (carbs == null || carbs < MIN_CARBS) {
+        if (carbs != null && carbs < MIN_CARBS) {
             return false;
         }
 
-        if (protein == null || protein < MIN_PROTEIN) {
+        if (protein != null && protein < MIN_PROTEIN) {
             return false;
         }
 
@@ -535,7 +532,11 @@ public class FilteringResponseService {
         final double MIN_FIBER = 6.0;
         Double fiber = getNutrimentValue(nutriments, "fiber_100g");
 
-        return (fiber != null && fiber >= MIN_FIBER);
+        if (fiber != null && fiber < MIN_FIBER){
+            return false;
+        }
+
+        return true;
 
         //Depois checar os alimentos probióticos
     }
@@ -551,7 +552,6 @@ public class FilteringResponseService {
 
         //Observa o Nova Group (Alimentos ultra-processados)
         if (novaGroup != null){
-            System.out.println(novaGroup.intValue());
             return novaGroup.intValue() == 1 || novaGroup.intValue() == 2 || novaGroup.intValue() == 3;
         }
 
