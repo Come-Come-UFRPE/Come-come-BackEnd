@@ -1,0 +1,48 @@
+# Dependabot: abre PRs de atualização de dependências (SCA contínuo).
+# Cada PR passa pela pipeline devsecops antes do merge.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directories:
+      - /eureka-server
+      - /api-gateway
+      - /Cadastro-Come-come
+      - /Anamnese-Come-come
+      - /Historico-come-come-main
+      - /Email-Come-come
+      - /favorite
+      - /OFF-Come-come
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      spring:
+        patterns: ["org.springframework*", "io.spring*"]
+      maven-demais:
+        patterns: ["*"]
+        exclude-patterns: ["org.springframework*", "io.spring*"]
+
+  - package-ecosystem: docker
+    directories:
+      - /eureka-server
+      - /api-gateway
+      - /Cadastro-Come-come
+      - /Anamnese-Come-come
+      - /Historico-come-come-main
+      - /Email-Come-come
+      - /favorite
+      - /OFF-Come-come
+    schedule:
+      interval: weekly
+    groups:
+      imagens-base:
+        patterns: ["*"]
+
+  # Mantém atualizadas as actions fixadas por hash na pipeline
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
