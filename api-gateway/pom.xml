@@ -37,16 +37,6 @@
 		<httpcore5.version>5.4.3</httpcore5.version>
 	</properties>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.google.guava</groupId>
-				<artifactId>guava</artifactId>
-				<version>33.7.2-jre</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -131,6 +121,11 @@
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-gateway-server</artifactId>
 				<version>${spring-cloud-gateway.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId>
+				<version>33.7.2-jre</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
