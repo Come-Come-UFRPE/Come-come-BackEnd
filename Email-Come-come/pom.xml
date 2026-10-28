@@ -37,6 +37,17 @@
 		<httpcore5.version>5.4.3</httpcore5.version>
 		<rabbit-amqp-client.version>5.34.0</rabbit-amqp-client.version>
 	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId>
+				<version>33.7.2-jre</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
