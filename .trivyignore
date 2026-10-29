@@ -1,0 +1,10 @@
+# Risco aceito, revisado em 2026-10-27 (PR #22).
+#
+# CVE-2026-47884, CVE-2026-47890 e CVE-2026-47892 (spring-webmvc /
+# spring-webflux) só têm correção no Spring Framework 7.0.9, que exige
+# migrar para o Spring Boot 4 — uma mudança de major version fora do escopo
+# deste PR. Diagnóstico completo em achados-pipeline-pr22.md. Reavaliar
+# nessa data: se ainda não migramos para o Spring Boot 4, reabrir a análise.
+CVE-2026-47884 exp:2027-04-30
+CVE-2026-47890 exp:2027-04-30
+CVE-2026-47892 exp:2027-04-30
