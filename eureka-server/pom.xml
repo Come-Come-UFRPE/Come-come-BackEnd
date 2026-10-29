@@ -58,13 +58,6 @@
 	</dependencyManagement>
 
 	<dependencies>
-		<!-- DEMO SEMINÁRIO: dependência vulnerável injetada de propósito (Log4Shell, CVE-2021-44228) -->
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<version>2.14.1</version>
-		</dependency>
-
 		<!-- Spring Boot Web (necessário para Eureka Server) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
