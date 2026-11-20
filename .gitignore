@@ -16,3 +16,13 @@
 *.dump
 OFF-Come-come/src/main/resources/OFF.sql
 dump/
+
+# Terraform: variáveis locais, estado e diretório de plugins
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+override.tf
+*_override.tf
+crash.log
