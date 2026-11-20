@@ -1,0 +1,266 @@
+# Pipeline DevSecOps do backend Come-Come
+#
+# Política de quality gates (o que BLOQUEIA o merge):
+#   - segredo encontrado no código (Gitleaks)
+#   - vulnerabilidade CRITICAL ou HIGH, com correção disponível, nas dependências
+#     Maven (Trivy fs) ou nas imagens Docker (Trivy image)
+# O que só REPORTA (aparece em Security > Code scanning, sem bloquear):
+#   - análise estática do código Java (CodeQL e Semgrep)
+#   - más configurações em Dockerfiles (Trivy misconfig)
+#
+# Cadeia de suprimentos: toda action de terceiros está fixada pelo hash do commit
+# (não pela tag) e os binários baixados têm o checksum conferido. Em março de 2026
+# as tags da aquasecurity/trivy-action foram adulteradas (CVE-2026-33634); só a
+# v0.35.0 ficou íntegra. Tag é mutável, hash não.
+#
+# Não depende de nenhuma nuvem: roda inteiro no GitHub Actions.
+
+name: devsecops
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: devsecops-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TRIVY_VERSION: v0.69.3 # versão íntegra indicada pela Aqua após o incidente
+  GITLEAKS_VERSION: 8.30.1
+  GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+  SEMGREP_VERSION: 1.182.1
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Segredos: Gitleaks (CLI, não exige licença) — BLOQUEIA
+  # ---------------------------------------------------------------------------
+  secrets:
+    name: Segredos (Gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0 # histórico completo: segredos antigos também contam
+
+      - name: Instalar Gitleaks (com checksum)
+        run: |
+          F="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${F}"
+          echo "${GITLEAKS_SHA256}  ${F}" | sha256sum -c -
+          sudo tar -xzf "$F" -C /usr/local/bin gitleaks
+          gitleaks version
+
+      - name: Varredura
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Em PR, olha só os commits do PR; em push/manual, o histórico inteiro.
+          ARGS=()
+          if [ "$EVENT" = "pull_request" ]; then
+            ARGS+=("--log-opts=${BASE_SHA}..${HEAD_SHA}")
+          fi
+          gitleaks git . "${ARGS[@]}" --redact --verbose \
+            --report-format sarif --report-path gitleaks.sarif
+
+      - name: Enviar resultados para o Security
+        if: always() && hashFiles('gitleaks.sarif') != ''
+        uses: github/codeql-action/upload-sarif@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3
+        with:
+          sarif_file: gitleaks.sarif
+          category: gitleaks
+
+  # ---------------------------------------------------------------------------
+  # 2. SAST: CodeQL (Java sem build) — REPORTA
+  # ---------------------------------------------------------------------------
+  codeql:
+    name: SAST (CodeQL)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: github/codeql-action/init@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3
+        with:
+          languages: java-kotlin
+          build-mode: none
+          queries: security-extended
+      - uses: github/codeql-action/analyze@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3
+        with:
+          category: codeql-java
+
+  # ---------------------------------------------------------------------------
+  # 3. SAST: Semgrep (regras Java/Spring e segredos da comunidade) — REPORTA
+  # ---------------------------------------------------------------------------
+  semgrep:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Instalar Semgrep
+        run: pipx install "semgrep==${SEMGREP_VERSION}"
+      - name: Varredura
+        run: semgrep scan --config p/java --config p/secrets --sarif --output semgrep.sarif --metrics off
+      - name: Enviar resultados para o Security
+        if: always() && hashFiles('semgrep.sarif') != ''
+        uses: github/codeql-action/upload-sarif@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  # ---------------------------------------------------------------------------
+  # 4. SCA + configuração: Trivy no repositório (pom.xml e Dockerfiles)
+  #    dependências: BLOQUEIA em CRITICAL/HIGH corrigível · config: REPORTA
+  # ---------------------------------------------------------------------------
+  trivy-repo:
+    name: Dependências e Dockerfiles (Trivy)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Relatório completo (SARIF)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig
+          format: sarif
+          output: trivy-repo.sarif
+
+      - name: Enviar resultados para o Security
+        if: always() && hashFiles('trivy-repo.sarif') != ''
+        uses: github/codeql-action/upload-sarif@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3
+        with:
+          sarif_file: trivy-repo.sarif
+          category: trivy-repo
+
+      - name: Gate — dependências CRITICAL/HIGH com correção
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          skip-setup-trivy: true
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          format: table
+          exit-code: '1'
+
+  # ---------------------------------------------------------------------------
+  # 5. Build e scan das 8 imagens + SBOM — BLOQUEIA em CRITICAL/HIGH corrigível
+  #    Em push na main, publica no GHCR (pronto para a migração futura).
+  # ---------------------------------------------------------------------------
+  images:
+    name: Imagem ${{ matrix.image }}
+    needs: secrets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { dir: eureka-server,            image: eureka-server }
+          - { dir: api-gateway,              image: api-gateway }
+          - { dir: Cadastro-Come-come,       image: cadastro }
+          - { dir: Anamnese-Come-come,       image: anamnese }
+          - { dir: Historico-come-come-main, image: historico }
+          - { dir: Email-Come-come,          image: email }
+          - { dir: favorite,                 image: favorite }
+          - { dir: OFF-Come-come,            image: openfoodfacts }
+    env:
+      PUBLISH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Nome da imagem
+        id: name
+        run: echo "ref=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/comecome-${{ matrix.image }}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: ./${{ matrix.dir }}
+          load: true
+          tags: ${{ steps.name.outputs.ref }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+
+      - name: Relatório da imagem (SARIF)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          scan-type: image
+          image-ref: ${{ steps.name.outputs.ref }}:${{ github.sha }}
+          format: sarif
+          output: trivy-${{ matrix.image }}.sarif
+
+      - name: Enviar resultados para o Security
+        if: always() && hashFiles(format('trivy-{0}.sarif', matrix.image)) != ''
+        uses: github/codeql-action/upload-sarif@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3
+        with:
+          sarif_file: trivy-${{ matrix.image }}.sarif
+          category: image-${{ matrix.image }}
+
+      - name: SBOM (CycloneDX)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          skip-setup-trivy: true
+          scan-type: image
+          image-ref: ${{ steps.name.outputs.ref }}:${{ github.sha }}
+          format: cyclonedx
+          output: sbom-${{ matrix.image }}.cdx.json
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sbom-${{ matrix.image }}
+          path: sbom-${{ matrix.image }}.cdx.json
+
+      - name: Gate — CRITICAL/HIGH com correção
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          skip-setup-trivy: true
+          scan-type: image
+          image-ref: ${{ steps.name.outputs.ref }}:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          format: table
+          exit-code: '1'
+
+      - name: Publicar no GHCR (só main)
+        if: env.PUBLISH == 'true'
+        env:
+          REF: ${{ steps.name.outputs.ref }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          echo "$TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+          docker tag "$REF:${GITHUB_SHA}" "$REF:main"
+          docker push "$REF:${GITHUB_SHA}"
+          docker push "$REF:main"
