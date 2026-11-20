@@ -12,11 +12,11 @@ resource "aws_security_group" "application" {
   }
 
   egress {
-    description = "Saida para atualizacoes, ECR e APIs externas; restringir em etapa de hardening."
+    description = "Permite comunicacao dentro da VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
 
   tags = {
