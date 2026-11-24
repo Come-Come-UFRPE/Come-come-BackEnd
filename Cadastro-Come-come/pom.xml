@@ -37,6 +37,7 @@
 		<httpcore5.version>5.4.3</httpcore5.version>
 		<rabbit-amqp-client.version>5.34.0</rabbit-amqp-client.version>
 		<postgresql.version>42.7.12</postgresql.version>
+		<maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
 	</properties>
 
 	<dependencyManagement>
