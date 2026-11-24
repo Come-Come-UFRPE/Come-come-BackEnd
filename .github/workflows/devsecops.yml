@@ -179,6 +179,7 @@ jobs:
           version: ${{ env.TRIVY_VERSION }}
           scan-type: fs
           scan-ref: .
+          trivyignores: '.trivyignore'
           scanners: vuln,misconfig
           format: sarif
           output: trivy-repo.sarif
@@ -197,6 +198,7 @@ jobs:
           skip-setup-trivy: true
           scan-type: fs
           scan-ref: .
+          trivyignores: '.trivyignore'
           scanners: vuln
           severity: CRITICAL,HIGH
           ignore-unfixed: true
@@ -253,6 +255,7 @@ jobs:
           version: ${{ env.TRIVY_VERSION }}
           scan-type: image
           image-ref: ${{ steps.name.outputs.ref }}:${{ github.sha }}
+          trivyignores: '.trivyignore'
           format: sarif
           output: trivy-${{ matrix.image }}.sarif
 
@@ -270,6 +273,7 @@ jobs:
           skip-setup-trivy: true
           scan-type: image
           image-ref: ${{ steps.name.outputs.ref }}:${{ github.sha }}
+          trivyignores: '.trivyignore'
           format: cyclonedx
           output: sbom-${{ matrix.image }}.cdx.json
 
@@ -285,6 +289,7 @@ jobs:
           skip-setup-trivy: true
           scan-type: image
           image-ref: ${{ steps.name.outputs.ref }}:${{ github.sha }}
+          trivyignores: '.trivyignore'
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           format: table
