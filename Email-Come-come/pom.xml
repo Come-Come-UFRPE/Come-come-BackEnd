@@ -87,6 +87,11 @@
 				<scope>import</scope>
 			</dependency>
 			<dependency>
+				<groupId>org.apache.qpid</groupId>
+				<artifactId>proton-j</artifactId>
+				<version>0.35.0</version>
+			</dependency>
+			<dependency>
 				<groupId>org.bouncycastle</groupId>
 				<artifactId>bcprov-jdk18on</artifactId>
 				<version>1.85</version>
