@@ -38,6 +38,43 @@ env:
 
 jobs:
   # ---------------------------------------------------------------------------
+  # 0. Testes Automatizados: JUnit 5 / Mockito — BLOQUEIA
+  # ---------------------------------------------------------------------------
+  unit-tests:
+    name: Testes Automatizados (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { dir: Cadastro-Come-come,       service: cadastro }
+          - { dir: Anamnese-Come-come,       service: anamnese }
+          - { dir: eureka-server,            service: eureka-server }
+          - { dir: api-gateway,              service: api-gateway }
+          - { dir: Historico-come-come-main, service: historico }
+          - { dir: Email-Come-come,          service: email }
+          - { dir: favorite,                 service: favorite }
+          - { dir: OFF-Come-come,            service: openfoodfacts }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Configurar JDK 21
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: '${{ matrix.dir }}/pom.xml'
+
+      - name: Executar testes automatizados
+        run: |
+          cd "${{ matrix.dir }}"
+          chmod +x mvnw
+          ./mvnw test -B
+
+  # ---------------------------------------------------------------------------
   # 1. Segredos: Gitleaks (CLI, não exige licença) — BLOQUEIA
   # ---------------------------------------------------------------------------
   secrets:
@@ -172,7 +209,7 @@ jobs:
   # ---------------------------------------------------------------------------
   images:
     name: Imagem ${{ matrix.image }}
-    needs: secrets
+    needs: [secrets, unit-tests]
     runs-on: ubuntu-latest
     permissions:
       contents: read

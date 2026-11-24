@@ -4,6 +4,7 @@ O workflow `.github/workflows/devsecops.yml` roda em todo pull request, em push 
 
 | Job | Ferramenta | O que verifica | Bloqueia? |
 | --- | --- | --- | --- |
+| Testes Unitários | JUnit 5 + Mockito | Testes unitários e de API dos microsserviços | Sim |
 | Segredos | Gitleaks 8.30.1 | Chaves, tokens e senhas no código e no histórico do Git | Sim |
 | SAST | CodeQL (`security-extended`) | Falhas no código Java, como injeção e uso inseguro de APIs | Não, reporta |
 | SAST | Semgrep (`p/java`, `p/secrets`) | Padrões inseguros em Java e Spring | Não, reporta |
