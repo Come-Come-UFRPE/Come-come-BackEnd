@@ -1,6 +1,7 @@
 package com.comecome.cadastro.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -42,6 +43,7 @@ public class SecurityConfig {
                                                                 "/swagger-ui/**",
                                                                 "/v3/api-docs/**"
                                                         ).permitAll()
+                                                        .requestMatchers(EndpointRequest.to("health", "info", "prometheus")).permitAll()
                                                         .requestMatchers(                                                        // ? Permissão do Swagger
                                                                 "reset-password/generate-token",
                                                                 "reset-password/verify-token",

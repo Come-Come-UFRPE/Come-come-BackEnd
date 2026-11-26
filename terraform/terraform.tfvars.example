@@ -8,3 +8,5 @@ gateway_port           = 8083
 # Troque pelo seu IP público /32 para restringir o acesso durante testes.
 # Exemplo: gateway_allowed_cidrs = ["203.0.113.10/32"]
 gateway_allowed_cidrs  = ["0.0.0.0/0"]
+grafana_port           = 3000
+grafana_allowed_cidrs  = []

@@ -1,0 +1,124 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: comecome-disponibilidade
+    folder: Come-come
+    interval: 1m
+    rules:
+      - uid: comecome-service-down
+        title: Serviço indisponível
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: up{job="comecome"}
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - type: query
+                  evaluator:
+                    type: lt
+                    params: [1]
+        noDataState: Alerting
+        execErrState: Error
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $$labels.service }} está fora do ar"
+          description: O Prometheus não consegue coletar métricas do serviço há mais de 1 minuto.
+
+  - orgId: 1
+    name: comecome-desempenho
+    folder: Come-come
+    interval: 1m
+    rules:
+      - uid: comecome-high-error-rate
+        title: Taxa de erros 5xx elevada
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: |
+                sum by (service) (rate(http_server_requests_seconds_count{job="comecome", outcome="SERVER_ERROR", uri!~"/actuator.*"}[5m]))
+                /
+                sum by (service) (rate(http_server_requests_seconds_count{job="comecome", uri!~"/actuator.*"}[5m]))
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - type: query
+                  evaluator:
+                    type: gt
+                    params: [0.05]
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $$labels.service }} com mais de 5% de respostas 5xx"
+          description: "Taxa atual: {{ humanizePercentage $$values.A.Value }}"
+
+      - uid: comecome-high-latency
+        title: Latência p95 elevada
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: |
+                histogram_quantile(0.95, sum by (service, le) (rate(http_server_requests_seconds_bucket{job="comecome", uri!~"/actuator.*"}[5m])))
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - type: query
+                  evaluator:
+                    type: gt
+                    params: [1]
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $$labels.service }} com latência p95 acima de 1s"
+          description: "p95 atual: {{ humanizeDuration $$values.A.Value }}"
