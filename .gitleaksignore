@@ -4,3 +4,9 @@
 # aceita quebra de linha depois do "=" e capturou a linha seguinte
 # ("PROMETHEUS_RETENTION=15d", entropia 3.80) como se fosse o valor.
 24ac7a896104920735fe69e194d331ee2a1896ec:.env.example:generic-api-key:49
+
+# OFF-Come-come/src/main/resources/nomes_produtos.json:430347 — lista pública de
+# nomes de produtos. "tapioca" contém a palavra-chave "api" e a regra
+# generic-api-key aceita "," como separador, então capturou o nome do produto da
+# linha seguinte ("dp3-isomalto-oligosaccharide") como se fosse uma chave.
+f9345e7d3ba4cdb2fd38a43117cfdaca6198e8f9:OFF-Come-come/src/main/resources/nomes_produtos.json:generic-api-key:430347
