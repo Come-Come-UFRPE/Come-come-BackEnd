@@ -57,22 +57,11 @@ resource "aws_route_table_association" "public" {
 # O destino S3 não precisa de IAM Role (o serviço de entrega de logs grava
 # direto no bucket, autorizado pela bucket policy). Isso é necessário no AWS
 # Academy Learner Lab, que não permite criar roles IAM.
+# O bucket em si é criado em buckets.tf.
 # ---------------------------------------------------------------------------
 
-resource "aws_s3_bucket" "vpc_flow_logs" {
-  # Nomes de bucket são globais na AWS; o ID da conta evita colisão.
-  bucket = "${var.project_name}-${var.environment}-vpc-flow-logs-${data.aws_caller_identity.current.account_id}"
-
-  # Permite que o terraform destroy remova o bucket mesmo com logs dentro.
-  force_destroy = true
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-vpc-flow-logs"
-  }
-}
-
 resource "aws_s3_bucket_ownership_controls" "vpc_flow_logs" {
-  bucket = aws_s3_bucket.vpc_flow_logs.id
+  bucket = data.aws_s3_bucket.vpc_flow_logs.id
 
   rule {
     object_ownership = "BucketOwnerEnforced"
@@ -80,7 +69,7 @@ resource "aws_s3_bucket_ownership_controls" "vpc_flow_logs" {
 }
 
 resource "aws_s3_bucket_public_access_block" "vpc_flow_logs" {
-  bucket = aws_s3_bucket.vpc_flow_logs.id
+  bucket = data.aws_s3_bucket.vpc_flow_logs.id
 
   block_public_acls       = true
   ignore_public_acls      = true
@@ -89,7 +78,7 @@ resource "aws_s3_bucket_public_access_block" "vpc_flow_logs" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "vpc_flow_logs" {
-  bucket = aws_s3_bucket.vpc_flow_logs.id
+  bucket = data.aws_s3_bucket.vpc_flow_logs.id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -100,7 +89,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "vpc_flow_logs" {
 
 # Mesma retenção que o log group do CloudWatch tinha antes (7 dias).
 resource "aws_s3_bucket_lifecycle_configuration" "vpc_flow_logs" {
-  bucket = aws_s3_bucket.vpc_flow_logs.id
+  bucket = data.aws_s3_bucket.vpc_flow_logs.id
 
   rule {
     id     = "expira-flow-logs"
@@ -116,7 +105,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "vpc_flow_logs" {
 
 # Autoriza só o serviço de entrega de logs desta conta a gravar no bucket.
 resource "aws_s3_bucket_policy" "vpc_flow_logs" {
-  bucket     = aws_s3_bucket.vpc_flow_logs.id
+  bucket     = data.aws_s3_bucket.vpc_flow_logs.id
   depends_on = [aws_s3_bucket_public_access_block.vpc_flow_logs]
 
   policy = jsonencode({
@@ -127,7 +116,7 @@ resource "aws_s3_bucket_policy" "vpc_flow_logs" {
         Effect    = "Allow"
         Principal = { Service = "delivery.logs.amazonaws.com" }
         Action    = "s3:PutObject"
-        Resource  = "${aws_s3_bucket.vpc_flow_logs.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        Resource  = "${data.aws_s3_bucket.vpc_flow_logs.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
         Condition = {
           StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id }
           ArnLike      = { "aws:SourceArn" = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*" }
@@ -138,7 +127,7 @@ resource "aws_s3_bucket_policy" "vpc_flow_logs" {
         Effect    = "Allow"
         Principal = { Service = "delivery.logs.amazonaws.com" }
         Action    = "s3:GetBucketAcl"
-        Resource  = aws_s3_bucket.vpc_flow_logs.arn
+        Resource  = data.aws_s3_bucket.vpc_flow_logs.arn
         Condition = {
           StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id }
           ArnLike      = { "aws:SourceArn" = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*" }
@@ -150,10 +139,10 @@ resource "aws_s3_bucket_policy" "vpc_flow_logs" {
         Effect    = "Allow"
         Principal = { Service = "logging.s3.amazonaws.com" }
         Action    = "s3:PutObject"
-        Resource  = "${aws_s3_bucket.vpc_flow_logs.arn}/s3-access/profile-pictures/*"
+        Resource  = "${data.aws_s3_bucket.vpc_flow_logs.arn}/s3-access/profile-pictures/*"
         Condition = {
           StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id }
-          ArnLike      = { "aws:SourceArn" = aws_s3_bucket.profile_pictures.arn }
+          ArnLike      = { "aws:SourceArn" = data.aws_s3_bucket.profile_pictures.arn }
         }
       },
       {
@@ -162,8 +151,8 @@ resource "aws_s3_bucket_policy" "vpc_flow_logs" {
         Principal = "*"
         Action    = "s3:*"
         Resource = [
-          aws_s3_bucket.vpc_flow_logs.arn,
-          "${aws_s3_bucket.vpc_flow_logs.arn}/*"
+          data.aws_s3_bucket.vpc_flow_logs.arn,
+          "${data.aws_s3_bucket.vpc_flow_logs.arn}/*"
         ]
         Condition = {
           Bool = { "aws:SecureTransport" = "false" }
@@ -178,7 +167,7 @@ resource "aws_flow_log" "main" {
   vpc_id               = aws_vpc.main.id
   traffic_type         = "REJECT"
   log_destination_type = "s3"
-  log_destination      = aws_s3_bucket.vpc_flow_logs.arn
+  log_destination      = data.aws_s3_bucket.vpc_flow_logs.arn
 
   # A policy precisa existir antes, senão a AWS tenta criar uma própria.
   depends_on = [aws_s3_bucket_policy.vpc_flow_logs]
