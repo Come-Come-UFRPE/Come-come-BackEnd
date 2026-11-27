@@ -3,19 +3,11 @@
 # O bucket é privado por padrão; só o prefixo users/ tem leitura pública, porque
 # a API devolve e salva a URL direta da foto para o front exibir. Escrita e
 # remoção são feitas pela EC2 via LabInstanceProfile, sem Access Keys.
-
-resource "aws_s3_bucket" "profile_pictures" {
-  # Nomes de bucket são globais na AWS; o ID da conta evita colisão.
-  bucket = "${var.project_name}-${var.environment}-profile-pictures-${data.aws_caller_identity.current.account_id}"
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-profile-pictures"
-  }
-}
+# O bucket em si é criado em buckets.tf.
 
 # Desativa ACLs: o acesso é controlado só por políticas.
 resource "aws_s3_bucket_ownership_controls" "profile_pictures" {
-  bucket = aws_s3_bucket.profile_pictures.id
+  bucket = data.aws_s3_bucket.profile_pictures.id
 
   rule {
     object_ownership = "BucketOwnerEnforced"
@@ -26,7 +18,7 @@ resource "aws_s3_bucket_ownership_controls" "profile_pictures" {
 # Atenção: se o "Block Public Access" estiver ligado no nível da CONTA AWS,
 # ele prevalece e a leitura pública não funcionará.
 resource "aws_s3_bucket_public_access_block" "profile_pictures" {
-  bucket = aws_s3_bucket.profile_pictures.id
+  bucket = data.aws_s3_bucket.profile_pictures.id
 
   block_public_acls  = true
   ignore_public_acls = true
@@ -44,7 +36,7 @@ resource "aws_s3_bucket_public_access_block" "profile_pictures" {
 # ser lidos anonimamente (exigem kms:Decrypt), o que quebraria a leitura pública.
 #trivy:ignore:AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "profile_pictures" {
-  bucket = aws_s3_bucket.profile_pictures.id
+  bucket = data.aws_s3_bucket.profile_pictures.id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -56,9 +48,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "profile_pictures"
 # Log de acesso do S3 (quem leu/gravou cada foto), gravado no bucket de logs
 # da VPC sob um prefixo próprio. Segue a retenção de 7 dias daquele bucket.
 resource "aws_s3_bucket_logging" "profile_pictures" {
-  bucket = aws_s3_bucket.profile_pictures.id
+  bucket = data.aws_s3_bucket.profile_pictures.id
 
-  target_bucket = aws_s3_bucket.vpc_flow_logs.id
+  target_bucket = data.aws_s3_bucket.vpc_flow_logs.id
   target_prefix = "s3-access/profile-pictures/"
 
   depends_on = [aws_s3_bucket_policy.vpc_flow_logs]
@@ -67,7 +59,7 @@ resource "aws_s3_bucket_logging" "profile_pictures" {
 # Versionamento protege contra sobrescrita/remoção acidental; versões antigas
 # expiram em 30 dias para não acumular custo (cada upload sobrescreve profile.jpg).
 resource "aws_s3_bucket_versioning" "profile_pictures" {
-  bucket = aws_s3_bucket.profile_pictures.id
+  bucket = data.aws_s3_bucket.profile_pictures.id
 
   versioning_configuration {
     status = "Enabled"
@@ -75,7 +67,7 @@ resource "aws_s3_bucket_versioning" "profile_pictures" {
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "profile_pictures" {
-  bucket     = aws_s3_bucket.profile_pictures.id
+  bucket     = data.aws_s3_bucket.profile_pictures.id
   depends_on = [aws_s3_bucket_versioning.profile_pictures]
 
   rule {
@@ -95,7 +87,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "profile_pictures" {
 }
 
 resource "aws_s3_bucket_policy" "profile_pictures" {
-  bucket     = aws_s3_bucket.profile_pictures.id
+  bucket     = data.aws_s3_bucket.profile_pictures.id
   depends_on = [aws_s3_bucket_public_access_block.profile_pictures]
 
   policy = jsonencode({
@@ -106,7 +98,7 @@ resource "aws_s3_bucket_policy" "profile_pictures" {
         Effect    = "Allow"
         Principal = "*"
         Action    = "s3:GetObject"
-        Resource  = "${aws_s3_bucket.profile_pictures.arn}/users/*"
+        Resource  = "${data.aws_s3_bucket.profile_pictures.arn}/users/*"
       },
       {
         Sid       = "NegaTrafegoSemTLS"
@@ -114,8 +106,8 @@ resource "aws_s3_bucket_policy" "profile_pictures" {
         Principal = "*"
         Action    = "s3:*"
         Resource = [
-          aws_s3_bucket.profile_pictures.arn,
-          "${aws_s3_bucket.profile_pictures.arn}/*"
+          data.aws_s3_bucket.profile_pictures.arn,
+          "${data.aws_s3_bucket.profile_pictures.arn}/*"
         ]
         Condition = {
           Bool = { "aws:SecureTransport" = "false" }

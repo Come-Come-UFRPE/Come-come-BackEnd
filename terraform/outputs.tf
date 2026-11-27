@@ -15,7 +15,7 @@ output "application_security_group_id" {
 
 output "profile_pictures_bucket" {
   description = "Bucket S3 das fotos de perfil (valor de AWS_S3_BUCKET)."
-  value       = aws_s3_bucket.profile_pictures.bucket
+  value       = data.aws_s3_bucket.profile_pictures.bucket
 }
 
 output "application_instance_profile" {

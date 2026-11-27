@@ -14,6 +14,11 @@ Esta primeira etapa cria somente recursos básicos de rede na AWS:
 
 **AWS Academy Learner Lab:** o Lab não permite criar roles IAM, por isso nenhum recurso aqui cria IAM. Os flow logs usam destino S3, que dispensa role.
 
+Outras restrições do Lab tratadas aqui:
+
+- **Buckets S3:** uma SCP do Lab nega `s3:GetBucketObjectLockConfiguration`, que o resource `aws_s3_bucket` sempre lê. Por isso os buckets são criados pelo AWS CLI dentro do Terraform (`buckets.tf`, só se ainda não existirem) e referenciados via `data "aws_s3_bucket"`. É preciso ter o **AWS CLI instalado**. O `terraform destroy` **não apaga os buckets**; remova-os com `aws s3 rb s3://<bucket> --force`.
+- **Descrição de Security Group:** a AWS só aceita ASCII (sem acentos).
+
 Ainda **não** cria EC2, NAT Gateway, ECR ou banco gerenciado. O S3 cobra por armazenamento e requisições (valores baixos para fotos de perfil). VPC, sub-rede, tabela de rotas e Security Group normalmente não têm cobrança horária por si só; o Internet Gateway também não tem tarifa horária, mas tráfego de dados pode ser cobrado. Consulte a tabela de preços AWS antes de evoluir a infraestrutura.
 
 ## Pré-requisitos locais
