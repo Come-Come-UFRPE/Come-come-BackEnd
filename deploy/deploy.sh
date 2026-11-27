@@ -55,7 +55,7 @@ log "autenticando no Infisical"
 if ! INFISICAL_TOKEN="$(infisical login --method=aws-iam \
   --machine-identity-id="$INFISICAL_IDENTITY_ID" --plain --silent)" || [ -z "$INFISICAL_TOKEN" ]; then
   log "ERRO: falha no login do Infisical. Confira se a identidade $INFISICAL_IDENTITY_ID tem AWS Auth"
-  log "      (principal arn:aws:sts::$ACCOUNT_ID:assumed-role/LabRole/*) e papel no projeto."
+  log "      (principal arn:aws:sts::$ACCOUNT_ID:assumed-role/LabRole, sem /*) e papel no projeto."
   exit 1
 fi
 export INFISICAL_TOKEN
