@@ -15,6 +15,9 @@ IMAGE_TAG="${1:?informe a tag das imagens (SHA do commit)}"
 PROJECT_NAME="${PROJECT_NAME:-comecome}"
 ENVIRONMENT="${ENVIRONMENT:-dev}"
 INFISICAL_ENV="${INFISICAL_ENV:-prod}"
+# Servidor fixo: sem isso, se o login falhar, o CLI abre um menu interativo
+# ("Select your hosting option") e o deploy trava em vez de falhar.
+export INFISICAL_DOMAIN="${INFISICAL_DOMAIN:-https://app.infisical.com}"
 SEED_FILE=/opt/comecome/data/OFF.sql
 
 export HOME="${HOME:-/root}"
@@ -49,8 +52,12 @@ fi
 
 # --- Segredos (Infisical via AWS IAM) --------------------------------------
 log "autenticando no Infisical"
-INFISICAL_TOKEN="$(infisical login --method=aws-iam \
-  --machine-identity-id="$INFISICAL_IDENTITY_ID" --plain --silent)"
+if ! INFISICAL_TOKEN="$(infisical login --method=aws-iam \
+  --machine-identity-id="$INFISICAL_IDENTITY_ID" --plain --silent)" || [ -z "$INFISICAL_TOKEN" ]; then
+  log "ERRO: falha no login do Infisical. Confira se a identidade $INFISICAL_IDENTITY_ID tem AWS Auth"
+  log "      (principal arn:aws:sts::$ACCOUNT_ID:assumed-role/LabRole, sem /*) e papel no projeto."
+  exit 1
+fi
 export INFISICAL_TOKEN
 
 compose() {

@@ -38,10 +38,10 @@ A EC2 se autentica no Infisical com a própria role (`LabRole`), sem segredo em 
 
    | Campo | Valor |
    |---|---|
-   | Allowed Principal ARNs | `arn:aws:sts::<ACCOUNT_ID>:assumed-role/LabRole/*` |
+   | Allowed Principal ARNs | `arn:aws:sts::<ACCOUNT_ID>:assumed-role/LabRole` |
    | Allowed Account IDs | `<ACCOUNT_ID>` |
 
-   `<ACCOUNT_ID>` é o número que aparece em `aws sts get-caller-identity`.
+   `<ACCOUNT_ID>` é o número que aparece em `aws sts get-caller-identity`. Sem `/*` no fim: o Infisical remove o nome da sessão (o ID da instância) do ARN antes de comparar.
 3. No **projeto** → **Access Control → Machine Identities → Add**: adicione `ec2-app` com o papel **Viewer**.
 4. Anote o **ID da identidade** (página da identidade) e o **Project ID** (Project Settings). É o ID, não o slug.
 
