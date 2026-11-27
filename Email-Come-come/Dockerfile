@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk-alpine@sha256:c07bb82e004a166b5d3d63b84ad70e2e822f228505e2e0c0b8dfdc2890d22f13 AS builder
+FROM eclipse-temurin:25-jdk-alpine@sha256:22edbb1021420ae6e248519d1af07577742314d67d4c60fcbb2e285b7e47fa78 AS builder
 WORKDIR /workspace/app
 
 # Copia arquivos de build primeiro para cache
@@ -13,7 +13,7 @@ RUN ./mvnw dependency:go-offline
 COPY src src
 RUN ./mvnw clean package -DskipTests
 
-FROM eclipse-temurin:21-jre-alpine@sha256:5d7689f47d670aca766b9503a70bccc2d73b4eb9221ae8f714ae958313c4ce70 AS runtime
+FROM eclipse-temurin:25-jre-alpine@sha256:69c2a26e9894016e274c880fa542956d005b3755f84db765145185e87405bd89 AS runtime
 WORKDIR /app
 
 # Corrige CVE-2026-111497 (brotli-libs), não coberta pelo digest fixado acima
