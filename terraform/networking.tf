@@ -145,6 +145,18 @@ resource "aws_s3_bucket_policy" "vpc_flow_logs" {
         }
       },
       {
+        # Log de acesso do bucket de fotos de perfil (storage.tf).
+        Sid       = "S3ServerAccessLogsFotosDePerfil"
+        Effect    = "Allow"
+        Principal = { Service = "logging.s3.amazonaws.com" }
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.vpc_flow_logs.arn}/s3-access/profile-pictures/*"
+        Condition = {
+          StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id }
+          ArnLike      = { "aws:SourceArn" = aws_s3_bucket.profile_pictures.arn }
+        }
+      },
+      {
         Sid       = "NegaTrafegoSemTLS"
         Effect    = "Deny"
         Principal = "*"

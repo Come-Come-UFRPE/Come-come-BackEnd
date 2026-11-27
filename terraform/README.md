@@ -6,12 +6,15 @@ Esta primeira etapa cria somente recursos básicos de rede na AWS:
 - uma sub-rede pública em `us-east-1a`;
 - Internet Gateway;
 - tabela de rotas para saída/entrada via Internet Gateway;
-- Security Group que libera somente a porta configurada do API Gateway na entrada.
-- VPC Flow Logs (só tráfego rejeitado) gravados num bucket S3 privado, com retenção de 7 dias.
+- Security Group que libera somente a porta configurada do API Gateway na entrada;
+- VPC Flow Logs (só tráfego rejeitado) gravados num bucket S3 privado, com retenção de 7 dias;
+- bucket S3 das fotos de perfil (privado, com leitura pública só em `users/*`, criptografado e versionado);
+- a futura EC2 da aplicação grava no bucket pelo `LabInstanceProfile` do Lab, sem Access Keys;
+- VPC Gateway Endpoint do S3 (sem custo), para o tráfego até o bucket não sair pela internet.
 
 **AWS Academy Learner Lab:** o Lab não permite criar roles IAM, por isso nenhum recurso aqui cria IAM. Os flow logs usam destino S3, que dispensa role.
 
-Ainda **não** cria EC2, NAT Gateway, ECR, banco gerenciado ou armazenamento. VPC, sub-rede, tabela de rotas e Security Group normalmente não têm cobrança horária por si só; o Internet Gateway também não tem tarifa horária, mas tráfego de dados pode ser cobrado. Consulte a tabela de preços AWS antes de evoluir a infraestrutura.
+Ainda **não** cria EC2, NAT Gateway, ECR ou banco gerenciado. O S3 cobra por armazenamento e requisições (valores baixos para fotos de perfil). VPC, sub-rede, tabela de rotas e Security Group normalmente não têm cobrança horária por si só; o Internet Gateway também não tem tarifa horária, mas tráfego de dados pode ser cobrado. Consulte a tabela de preços AWS antes de evoluir a infraestrutura.
 
 ## Pré-requisitos locais
 

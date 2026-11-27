@@ -109,7 +109,7 @@ public class UserService {
         User removed = userRepository.findByUserId(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        //Remove a imagem do storage da Azure
+        //Remove a imagem do storage (S3)
         blobStorageService.deleteProfilePicture(userId);
         userRepository.delete(removed);
     }
@@ -123,11 +123,12 @@ public class UserService {
 
         String fileName = "users/" + userId + "/profile.jpg";
 
-        // 2. Upload para o Azure
+        // 2. Upload para o S3
         String fileUrl = blobStorageService.uploadFile(
                 fileName,
                 file.getInputStream(),
-                file.getSize()
+                file.getSize(),
+                file.getContentType()
         );
 
         // 3. Salvar o NOVO link no banco

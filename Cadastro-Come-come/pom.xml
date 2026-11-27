@@ -158,21 +158,18 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- Armazenamento das fotos de perfil (Amazon S3). Só o cliente síncrono
+		     é usado, então o cliente HTTP assíncrono (Netty) fica de fora. -->
 		<dependency>
-			<groupId>com.azure</groupId>
-			<artifactId>azure-storage-blob</artifactId>
-			<version>12.25.1</version> <exclusions>
-			<exclusion>
-				<groupId>com.azure</groupId>
-				<artifactId>azure-core-http-netty</artifactId>
-			</exclusion>
-		</exclusions>
-		</dependency>
-
-		<dependency>
-			<groupId>com.azure</groupId>
-			<artifactId>azure-core-http-okhttp</artifactId>
-			<version>1.11.8</version>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+			<version>2.59.0</version>
+			<exclusions>
+				<exclusion>
+					<groupId>software.amazon.awssdk</groupId>
+					<artifactId>netty-nio-client</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 
