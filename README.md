@@ -13,7 +13,7 @@ Essa é a instância do BackEnd para o aplicativo Mobile **Come-come**, focado n
 - **RabbitMQ** (Mensageria Assíncrona)
 - **Swagger UI** para documentação da API  
 - **Open Food Facts API** (integração externa)
-- **Azure Blob Storage** (Salvar perfis em uma nuvem específica)
+- **Amazon S3** (Armazenamento das fotos de perfil)
 - **Brevo API** (Envio de emails)
 
 ---

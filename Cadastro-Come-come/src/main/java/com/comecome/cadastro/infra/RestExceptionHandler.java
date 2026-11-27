@@ -1,6 +1,7 @@
 package com.comecome.cadastro.infra;
 
 import com.comecome.cadastro.exceptions.EmailAlreadyExistsException;
+import com.comecome.cadastro.exceptions.InvalidFileTypeException;
 import com.comecome.cadastro.exceptions.InvalidTokenException;
 import com.comecome.cadastro.exceptions.NotAuthenticatedException;
 import com.comecome.cadastro.exceptions.TokenExpiredException;
@@ -42,6 +43,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<RestErrorMessage> handleInvalidToken(InvalidTokenException ex) {
         RestErrorMessage error = new RestErrorMessage(HttpStatus.FORBIDDEN, ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    @ExceptionHandler(InvalidFileTypeException.class)
+    public ResponseEntity<RestErrorMessage> handleInvalidFileType(InvalidFileTypeException ex) {
+        RestErrorMessage error = new RestErrorMessage(HttpStatus.UNSUPPORTED_MEDIA_TYPE, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(error);
     }
 
 }
