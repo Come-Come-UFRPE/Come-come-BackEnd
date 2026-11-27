@@ -23,6 +23,9 @@ dump/
 *.tfstate.*
 *.tfvars
 !*.tfvars.example
+# Planos salvos (terraform plan -out=...) contêm snapshot do estado
+*.tfplan
+tfplan
 override.tf
 *_override.tf
 crash.log
