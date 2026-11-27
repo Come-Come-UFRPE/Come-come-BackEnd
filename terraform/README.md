@@ -7,6 +7,9 @@ Esta primeira etapa cria somente recursos básicos de rede na AWS:
 - Internet Gateway;
 - tabela de rotas para saída/entrada via Internet Gateway;
 - Security Group que libera somente a porta configurada do API Gateway na entrada.
+- VPC Flow Logs (só tráfego rejeitado) gravados num bucket S3 privado, com retenção de 7 dias.
+
+**AWS Academy Learner Lab:** o Lab não permite criar roles IAM, por isso nenhum recurso aqui cria IAM. Os flow logs usam destino S3, que dispensa role.
 
 Ainda **não** cria EC2, NAT Gateway, ECR, banco gerenciado ou armazenamento. VPC, sub-rede, tabela de rotas e Security Group normalmente não têm cobrança horária por si só; o Internet Gateway também não tem tarifa horária, mas tráfego de dados pode ser cobrado. Consulte a tabela de preços AWS antes de evoluir a infraestrutura.
 
