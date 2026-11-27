@@ -1,0 +1,39 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  external_labels:
+    project: comecome
+
+scrape_configs:
+  - job_name: comecome
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["eureka-server:9000"]
+        labels:
+          service: eureka-server
+      - targets: ["api-gateway:9000"]
+        labels:
+          service: api-gateway
+      - targets: ["ms-cadastro:9000"]
+        labels:
+          service: ms-cadastro
+      - targets: ["ms-anamnese:9000"]
+        labels:
+          service: ms-anamnese
+      - targets: ["ms-off:9000"]
+        labels:
+          service: ms-off
+      - targets: ["ms-historico:9000"]
+        labels:
+          service: ms-historico
+      - targets: ["ms-email:9000"]
+        labels:
+          service: ms-email
+      - targets: ["ms-favoritos:9000"]
+        labels:
+          service: ms-favoritos
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

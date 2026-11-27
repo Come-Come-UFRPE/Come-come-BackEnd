@@ -1,0 +1,81 @@
+name: Test Infisical Integration
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test-infisical:
+    name: Test Infisical Connection
+    runs-on: ubuntu-latest
+    # Exige aprovação manual antes de acessar segredos de produção
+    # (configure "Required reviewers" em Settings > Environments > production)
+    environment: production
+
+    steps:
+      - name: Fetch secrets from Infisical
+        uses: Infisical/secrets-action@d2e351f16c6ca20d17c85e6c992e04bdeb64e87d # v1.0.18
+        with:
+          method: oidc
+          identity-id: ${{ vars.INFISICAL_IDENTITY_ID }}
+          project-slug: ${{ vars.INFISICAL_PROJECT_SLUG }}
+          env-slug: prod
+          secret-path: /
+          recursive: true
+          oidc-audience: https://github.com/Come-Come-UFRPE
+
+      - name: Validate secrets
+        shell: bash
+        run: |
+          required_vars=(
+            GLOBAL_PASSWORD
+            NETWORK_NAME
+            RABBITMQ_USER
+            RABBITMQ_AMQP_PORT
+            RABBITMQ_MGMT_PORT
+            REDIS_PORT
+            EUREKA_PORT
+            GATEWAY_PORT
+            DB_ANAMNESE_NAME
+            DB_CADASTRO_NAME
+            DB_FAVORITOS_NAME
+            DB_HISTORICO_NAME
+            DB_OFF_NAME
+            SMTP_HOST
+            SMTP_PASS
+            SMTP_PORT
+            SMTP_USER
+            MS_ANAMNESE_PORT
+            MS_CADASTRO_PORT
+            MS_EMAIL_PORT
+            MS_FAVORITOS_PORT
+            MS_HISTORICO_PORT
+            MS_OFF_PORT
+            AZURE_ACCOUNT_NAME
+            AZURE_ACCOUNT_KEY
+            AZURE_CONTAINER_NAME
+            GRAFANA_PORT
+            GRAFANA_ADMIN_USER
+            GRAFANA_ADMIN_PASSWORD
+          )
+
+          missing=0
+
+          for var in "${required_vars[@]}"; do
+            if [[ -z "${!var:-}" ]]; then
+              echo "::error::Variável ausente: $var"
+              missing=1
+            else
+              echo "OK: $var encontrada"
+            fi
+          done
+
+          if [[ "$missing" -ne 0 ]]; then
+            echo "Algumas variáveis não foram encontradas."
+            exit 1
+          fi
+
+          echo "Integração com Infisical funcionando!"

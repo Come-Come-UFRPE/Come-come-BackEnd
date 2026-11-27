@@ -11,6 +11,18 @@ resource "aws_security_group" "application" {
     cidr_blocks = var.gateway_allowed_cidrs
   }
 
+  dynamic "ingress" {
+    for_each = length(var.grafana_allowed_cidrs) > 0 ? [var.grafana_allowed_cidrs] : []
+
+    content {
+      description = "Grafana"
+      from_port   = var.grafana_port
+      to_port     = var.grafana_port
+      protocol    = "tcp"
+      cidr_blocks = ingress.value
+    }
+  }
+
   egress {
     description = "Permite comunicacao dentro da VPC"
     from_port   = 0
