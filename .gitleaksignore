@@ -1,0 +1,6 @@
+# Falsos positivos revisados do Gitleaks (um fingerprint por linha).
+#
+# .env.example:49 — GRAFANA_ADMIN_PASSWORD está vazio. A regra generic-api-key
+# aceita quebra de linha depois do "=" e capturou a linha seguinte
+# ("PROMETHEUS_RETENTION=15d", entropia 3.80) como se fosse o valor.
+24ac7a896104920735fe69e194d331ee2a1896ec:.env.example:generic-api-key:49
