@@ -28,12 +28,21 @@ resource "aws_s3_bucket_ownership_controls" "profile_pictures" {
 resource "aws_s3_bucket_public_access_block" "profile_pictures" {
   bucket = aws_s3_bucket.profile_pictures.id
 
-  block_public_acls       = true
-  ignore_public_acls      = true
-  block_public_policy     = false
+  block_public_acls  = true
+  ignore_public_acls = true
+
+  # Risco aceito: a leitura pública de users/* é intencional (o front exibe a
+  # URL direta da foto). Só GetObject é público; escrita/remoção exigem a role
+  # da EC2, e o upload aceita apenas JPEG/PNG/WebP.
+  #trivy:ignore:AWS-0087
+  block_public_policy = false
+  #trivy:ignore:AWS-0093
   restrict_public_buckets = false
 }
 
+# SSE-S3 (AES256) de propósito: objetos cifrados com chave KMS própria não podem
+# ser lidos anonimamente (exigem kms:Decrypt), o que quebraria a leitura pública.
+#trivy:ignore:AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "profile_pictures" {
   bucket = aws_s3_bucket.profile_pictures.id
 
@@ -42,6 +51,17 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "profile_pictures"
       sse_algorithm = "AES256"
     }
   }
+}
+
+# Log de acesso do S3 (quem leu/gravou cada foto), gravado no bucket de logs
+# da VPC sob um prefixo próprio. Segue a retenção de 7 dias daquele bucket.
+resource "aws_s3_bucket_logging" "profile_pictures" {
+  bucket = aws_s3_bucket.profile_pictures.id
+
+  target_bucket = aws_s3_bucket.vpc_flow_logs.id
+  target_prefix = "s3-access/profile-pictures/"
+
+  depends_on = [aws_s3_bucket_policy.vpc_flow_logs]
 }
 
 # Versionamento protege contra sobrescrita/remoção acidental; versões antigas
