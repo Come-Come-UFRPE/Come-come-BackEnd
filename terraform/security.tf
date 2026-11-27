@@ -1,6 +1,6 @@
 resource "aws_security_group" "application" {
   name = "${var.project_name}-${var.environment}-application-sg"
-  # A AWS só aceita ASCII na descrição do Security Group (sem acentos).
+  # Descrições do SG e das regras: só ASCII, sem acentos e sem "<>" (a AWS recusa).
   # Mudar a descrição recria o Security Group, por isso ela foi mantida.
   description = "Permite acesso HTTP ao API Gateway; os demais servicos permanecem internos."
   vpc_id      = aws_vpc.main.id
@@ -19,7 +19,7 @@ resource "aws_security_group" "application" {
   }
 
   ingress {
-    description = "HTTPS (Caddy -> API Gateway)"
+    description = "HTTPS (Caddy para o API Gateway)"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"

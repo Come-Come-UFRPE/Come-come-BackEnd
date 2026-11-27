@@ -1,7 +1,8 @@
 #!/bin/bash
 # Bootstrap da EC2 da aplicação (roda uma única vez, no primeiro boot).
 # Log em /var/log/comecome-bootstrap.log
-# Observação: este arquivo é um template do Terraform; $${...} vira ${...} no shell.
+# Observação: este arquivo é um template do Terraform. Variáveis do shell com chaves
+# precisam de dois cifrões (ex.: $${SERIAL}); com um só, o Terraform tenta interpolar.
 set -euxo pipefail
 exec > >(tee -a /var/log/comecome-bootstrap.log) 2>&1
 
