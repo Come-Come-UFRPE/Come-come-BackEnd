@@ -1,0 +1,145 @@
+# Override de produção (EC2). Uso, sempre junto com o arquivo base:
+#   docker compose -f docker-compose.yaml -f docker-compose.prod.yml up -d
+# Quem roda isso é o deploy/deploy.sh, com os segredos injetados pelo Infisical.
+#
+# Diferenças em relação ao ambiente local:
+#   - serviços Java usam as imagens publicadas no GHCR (tag = SHA do commit),
+#     em vez de construir localmente;
+#   - nenhuma porta é publicada no host, exceto 80/443 do Caddy (proxy HTTPS);
+#   - limites de memória para caber tudo numa t3.large (8 GiB);
+#   - todos os serviços reiniciam sozinhos (ex.: nova sessão do Learner Lab).
+#
+# Requer Docker Compose >= 2.24 (tag !reset).
+
+# Obs.: o !reset precisa estar em cada serviço; dentro de uma âncora YAML
+# (<<: *java) o Compose o ignora.
+x-java: &java
+  restart: unless-stopped
+  mem_limit: 512m
+
+services:
+  # --- Proxy HTTPS ---------------------------------------------------------
+  caddy:
+    image: 'caddy:2.11.8-alpine@sha256:f6228111e5fafa1a5238258d0858e103f10599b8d1659a146e7726681a002bb9'
+    container_name: caddy
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    environment:
+      - 'APP_DOMAIN=${APP_DOMAIN:?APP_DOMAIN não definido (o deploy.sh calcula a partir do Elastic IP)}'
+      - 'GATEWAY_PORT=${GATEWAY_PORT}'
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api-gateway
+    networks:
+      - nt-general-come-come
+    restart: unless-stopped
+    mem_limit: 128m
+
+  # --- Serviços Java (imagens do GHCR) --------------------------------------
+  eureka-server:
+    <<: *java
+    build: !reset null
+    ports: !reset []
+    image: 'ghcr.io/come-come-ufrpe/comecome-eureka-server:${IMAGE_TAG:?IMAGE_TAG não definido}'
+    mem_limit: 384m
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError
+
+  api-gateway:
+    <<: *java
+    build: !reset null
+    ports: !reset []
+    image: 'ghcr.io/come-come-ufrpe/comecome-api-gateway:${IMAGE_TAG:?IMAGE_TAG não definido}'
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError -Dreactor.netty.http.server.accessLogEnabled=true
+
+  ms-off:
+    <<: *java
+    build: !reset null
+    ports: !reset []
+    image: 'ghcr.io/come-come-ufrpe/comecome-openfoodfacts:${IMAGE_TAG:?IMAGE_TAG não definido}'
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError
+
+  ms-cadastro:
+    <<: *java
+    build: !reset null
+    ports: !reset []
+    image: 'ghcr.io/come-come-ufrpe/comecome-cadastro:${IMAGE_TAG:?IMAGE_TAG não definido}'
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError
+
+  ms-anamnese:
+    <<: *java
+    build: !reset null
+    ports: !reset []
+    image: 'ghcr.io/come-come-ufrpe/comecome-anamnese:${IMAGE_TAG:?IMAGE_TAG não definido}'
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError
+
+  ms-historico:
+    <<: *java
+    build: !reset null
+    ports: !reset []
+    image: 'ghcr.io/come-come-ufrpe/comecome-historico:${IMAGE_TAG:?IMAGE_TAG não definido}'
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError
+
+  ms-email:
+    <<: *java
+    build: !reset null
+    ports: !reset []
+    image: 'ghcr.io/come-come-ufrpe/comecome-email:${IMAGE_TAG:?IMAGE_TAG não definido}'
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError
+
+  ms-favoritos:
+    <<: *java
+    build: !reset null
+    ports: !reset []
+    image: 'ghcr.io/come-come-ufrpe/comecome-favorite:${IMAGE_TAG:?IMAGE_TAG não definido}'
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError
+
+  # --- Infraestrutura (sem portas no host) ----------------------------------
+  postgres:
+    ports: !reset []
+    restart: unless-stopped
+    mem_limit: 768m
+    volumes:
+      # O seed do OpenFoodFacts não está no Git; o deploy.sh baixa do bucket
+      # de artefatos para este caminho antes de subir a stack.
+      - /opt/comecome/data/OFF.sql:/docker-entrypoint-initdb.d/01-init-off.sql:ro
+
+  rabbitmq:
+    ports: !reset []
+    restart: unless-stopped
+    mem_limit: 512m
+
+  redis:
+    ports: !reset []
+    restart: unless-stopped
+    mem_limit: 128m
+
+  # --- Observabilidade (Grafana só por túnel SSM, ver deploy/README.md) -----
+  prometheus:
+    mem_limit: 512m
+
+  loki:
+    mem_limit: 384m
+
+  alloy:
+    mem_limit: 256m
+
+  grafana:
+    ports: !reset []
+    mem_limit: 256m
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,137 @@
+# Deploy contínuo na EC2 do AWS Academy Learner Lab.
+#
+# Roda depois que o devsecops termina com sucesso num push na main (ou seja,
+# depois que as imagens daquele commit foram testadas, escaneadas e publicadas
+# no GHCR). Também pode ser disparado à mão, com o SHA de um commit da main.
+#
+# Fluxo: credenciais da sessão do Lab -> localiza a EC2 -> AWS SSM Run Command
+# executa deploy/deploy.sh na instância -> smoke test em https://<ip>.sslip.io/healthz
+#
+# O Learner Lab não permite OIDC com a AWS, então as credenciais da sessão
+# (que expiram a cada ~4h) ficam como secrets do environment "production" e
+# precisam ser atualizadas a cada sessão. Ver deploy/README.md.
+
+name: deploy
+
+on:
+  workflow_run:
+    workflows: [devsecops]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'SHA completo do commit a publicar (vazio = último commit da main)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy na EC2
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 40
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+      AWS_DEFAULT_REGION: us-east-1
+      INSTANCE_NAME: comecome-dev-app
+      IMAGE_TAG: ${{ inputs.image_tag || github.event.workflow_run.head_sha || github.sha }}
+      INFISICAL_IDENTITY_ID: ${{ vars.INFISICAL_EC2_IDENTITY_ID }}
+      INFISICAL_PROJECT_ID: ${{ vars.INFISICAL_PROJECT_ID }}
+    steps:
+      - name: Validar parâmetros
+        run: |
+          # Os valores entram num comando executado como root na EC2: só aceita
+          # formatos esperados, nada de texto livre.
+          [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::image_tag precisa ser o SHA completo (40 caracteres hex)."; exit 1; }
+          [[ "$INFISICAL_IDENTITY_ID" =~ ^[A-Za-z0-9-]+$ ]] || { echo "::error::Variable INFISICAL_EC2_IDENTITY_ID ausente ou inválida."; exit 1; }
+          [[ "$INFISICAL_PROJECT_ID" =~ ^[A-Za-z0-9-]+$ ]] || { echo "::error::Variable INFISICAL_PROJECT_ID ausente ou inválida."; exit 1; }
+
+      - name: Verificar sessão do Learner Lab
+        run: |
+          if ! aws sts get-caller-identity --query Arn --output text; then
+            echo "::error::Credenciais AWS inválidas ou expiradas. Inicie o Learner Lab e atualize os secrets AWS_* do environment production (ver deploy/README.md)."
+            exit 1
+          fi
+
+      - name: Localizar instância
+        id: ec2
+        run: |
+          read -r ID IP < <(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=$INSTANCE_NAME" "Name=instance-state-name,Values=running" \
+            --query 'Reservations[0].Instances[0].[InstanceId,PublicIpAddress]' --output text)
+          if [ -z "$ID" ] || [ "$ID" = "None" ]; then
+            echo "::error::Nenhuma instância '$INSTANCE_NAME' em execução. O Lab está iniciado? O terraform apply foi feito?"
+            exit 1
+          fi
+          echo "id=$ID" >> "$GITHUB_OUTPUT"
+          echo "domain=${IP//./-}.sslip.io" >> "$GITHUB_OUTPUT"
+          echo "Instância $ID -> https://${IP//./-}.sslip.io"
+
+      - name: Deploy via SSM
+        env:
+          INSTANCE_ID: ${{ steps.ec2.outputs.id }}
+        run: |
+          PARAMS=$(jq -n --arg tag "$IMAGE_TAG" --arg ident "$INFISICAL_IDENTITY_ID" --arg proj "$INFISICAL_PROJECT_ID" '{
+            commands: [
+              "set -eu",
+              "export HOME=/root",
+              "cd /opt/comecome/repo",
+              "git fetch --depth 1 origin \($tag)",
+              "git checkout --force FETCH_HEAD",
+              "INFISICAL_IDENTITY_ID=\($ident) INFISICAL_PROJECT_ID=\($proj) bash deploy/deploy.sh \($tag)"
+            ],
+            executionTimeout: ["1800"]
+          }')
+
+          CMD_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name AWS-RunShellScript \
+            --comment "deploy ${IMAGE_TAG:0:7}" \
+            --parameters "$PARAMS" \
+            --query Command.CommandId --output text)
+          echo "SSM command: $CMD_ID"
+
+          # Acompanha até terminar (o deploy pode levar vários minutos).
+          for _ in $(seq 1 120); do
+            sleep 15
+            STATUS=$(aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
+              --query Status --output text 2>/dev/null || echo Pending)
+            case "$STATUS" in Pending|InProgress|Delayed) continue ;; *) break ;; esac
+          done
+
+          aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
+            --query '[StandardOutputContent, StandardErrorContent]' --output text || true
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "::error::Deploy terminou com status $STATUS."
+            exit 1
+          fi
+
+      - name: Smoke test
+        env:
+          DOMAIN: ${{ steps.ec2.outputs.domain }}
+        run: |
+          # Na primeira vez o Caddy ainda emite o certificado e as JVMs sobem.
+          for _ in $(seq 1 30); do
+            if curl -fsS --max-time 10 "https://$DOMAIN/healthz"; then
+              echo
+              echo "API no ar: https://$DOMAIN"
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "::error::https://$DOMAIN/healthz não respondeu com sucesso em 10 minutos."
+          exit 1

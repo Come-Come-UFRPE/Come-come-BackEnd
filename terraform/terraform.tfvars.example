@@ -1,12 +1,9 @@
-aws_region             = "us-east-1"
-project_name           = "comecome"
-environment            = "dev"
-vpc_cidr               = "10.20.0.0/16"
-public_subnet_cidr     = "10.20.1.0/24"
-availability_zone      = "us-east-1a"
-gateway_port           = 8083
-# Troque pelo seu IP público /32 para restringir o acesso durante testes.
-# Exemplo: gateway_allowed_cidrs = ["203.0.113.10/32"]
-gateway_allowed_cidrs  = ["0.0.0.0/0"]
-grafana_port           = 3000
-grafana_allowed_cidrs  = []
+aws_region         = "us-east-1"
+project_name       = "comecome"
+environment        = "dev"
+vpc_cidr           = "10.20.0.0/16"
+public_subnet_cidr = "10.20.1.0/24"
+availability_zone  = "us-east-1a"
+instance_type      = "t3.large"
+root_volume_size   = 20
+data_volume_size   = 30
