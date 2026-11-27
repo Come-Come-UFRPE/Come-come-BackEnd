@@ -9,3 +9,6 @@ provider "aws" {
     }
   }
 }
+
+# Conta AWS em uso (usada para gerar nomes únicos de bucket).
+data "aws_caller_identity" "current" {}

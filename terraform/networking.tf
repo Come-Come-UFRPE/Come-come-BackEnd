@@ -51,49 +51,113 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# CloudWatch Log Group para armazenar os VPC Flow Logs
-resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
-  name              = "/aws/vpc/${var.project_name}-${var.environment}/flow-logs"
-  retention_in_days = 7
+# ---------------------------------------------------------------------------
+# VPC Flow Logs -> bucket S3
+#
+# O destino S3 não precisa de IAM Role (o serviço de entrega de logs grava
+# direto no bucket, autorizado pela bucket policy). Isso é necessário no AWS
+# Academy Learner Lab, que não permite criar roles IAM.
+# ---------------------------------------------------------------------------
+
+resource "aws_s3_bucket" "vpc_flow_logs" {
+  # Nomes de bucket são globais na AWS; o ID da conta evita colisão.
+  bucket = "${var.project_name}-${var.environment}-vpc-flow-logs-${data.aws_caller_identity.current.account_id}"
+
+  # Permite que o terraform destroy remova o bucket mesmo com logs dentro.
+  force_destroy = true
 
   tags = {
     Name = "${var.project_name}-${var.environment}-vpc-flow-logs"
   }
 }
 
-# Role IAM para permitir que o VPC Flow Logs envie registros ao CloudWatch
-resource "aws_iam_role" "vpc_flow_logs" {
-  name = "${var.project_name}-${var.environment}-vpc-flow-logs-role"
+resource "aws_s3_bucket_ownership_controls" "vpc_flow_logs" {
+  bucket = aws_s3_bucket.vpc_flow_logs.id
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "vpc-flow-logs.amazonaws.com"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
 }
 
-# Permissões da role IAM
-resource "aws_iam_role_policy" "vpc_flow_logs" {
-  name = "${var.project_name}-${var.environment}-vpc-flow-logs-policy"
-  role = aws_iam_role.vpc_flow_logs.id
+resource "aws_s3_bucket_public_access_block" "vpc_flow_logs" {
+  bucket = aws_s3_bucket.vpc_flow_logs.id
+
+  block_public_acls       = true
+  ignore_public_acls      = true
+  block_public_policy     = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "vpc_flow_logs" {
+  bucket = aws_s3_bucket.vpc_flow_logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# Mesma retenção que o log group do CloudWatch tinha antes (7 dias).
+resource "aws_s3_bucket_lifecycle_configuration" "vpc_flow_logs" {
+  bucket = aws_s3_bucket.vpc_flow_logs.id
+
+  rule {
+    id     = "expira-flow-logs"
+    status = "Enabled"
+
+    filter {}
+
+    expiration {
+      days = 7
+    }
+  }
+}
+
+# Autoriza só o serviço de entrega de logs desta conta a gravar no bucket.
+resource "aws_s3_bucket_policy" "vpc_flow_logs" {
+  bucket     = aws_s3_bucket.vpc_flow_logs.id
+  depends_on = [aws_s3_bucket_public_access_block.vpc_flow_logs]
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = [
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogGroups",
-        "logs:DescribeLogStreams"
-      ]
-      Resource = "${aws_cloudwatch_log_group.vpc_flow_logs.arn}:*"
-    }]
+    Statement = [
+      {
+        Sid       = "AWSLogDeliveryWrite"
+        Effect    = "Allow"
+        Principal = { Service = "delivery.logs.amazonaws.com" }
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.vpc_flow_logs.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        Condition = {
+          StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id }
+          ArnLike      = { "aws:SourceArn" = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*" }
+        }
+      },
+      {
+        Sid       = "AWSLogDeliveryAclCheck"
+        Effect    = "Allow"
+        Principal = { Service = "delivery.logs.amazonaws.com" }
+        Action    = "s3:GetBucketAcl"
+        Resource  = aws_s3_bucket.vpc_flow_logs.arn
+        Condition = {
+          StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id }
+          ArnLike      = { "aws:SourceArn" = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*" }
+        }
+      },
+      {
+        Sid       = "NegaTrafegoSemTLS"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          aws_s3_bucket.vpc_flow_logs.arn,
+          "${aws_s3_bucket.vpc_flow_logs.arn}/*"
+        ]
+        Condition = {
+          Bool = { "aws:SecureTransport" = "false" }
+        }
+      }
+    ]
   })
 }
 
@@ -101,9 +165,11 @@ resource "aws_iam_role_policy" "vpc_flow_logs" {
 resource "aws_flow_log" "main" {
   vpc_id               = aws_vpc.main.id
   traffic_type         = "REJECT"
-  log_destination_type = "cloud-watch-logs"
-  log_destination      = aws_cloudwatch_log_group.vpc_flow_logs.arn
-  iam_role_arn         = aws_iam_role.vpc_flow_logs.arn
+  log_destination_type = "s3"
+  log_destination      = aws_s3_bucket.vpc_flow_logs.arn
+
+  # A policy precisa existir antes, senão a AWS tenta criar uma própria.
+  depends_on = [aws_s3_bucket_policy.vpc_flow_logs]
 
   tags = {
     Name = "${var.project_name}-${var.environment}-vpc-flow-logs"
