@@ -111,10 +111,15 @@ services:
     ports: !reset []
     restart: unless-stopped
     mem_limit: 768m
-    volumes:
-      # O seed do OpenFoodFacts não está no Git; o deploy.sh baixa do bucket
-      # de artefatos para este caminho antes de subir a stack.
-      - /opt/comecome/data/OFF.sql:/docker-entrypoint-initdb.d/01-init-off.sql:ro
+    # !override substitui a lista inteira: o arquivo base monta o OFF.sql local
+    # (que não existe na EC2) e o Docker criaria um diretório no lugar dele.
+    # O seed do OpenFoodFacts não está no Git; o deploy.sh baixa a versão
+    # comprimida do bucket de artefatos. A imagem do Postgres importa .sql.gz
+    # direto na primeira inicialização (volume de dados vazio).
+    volumes: !override
+      - ./scripts/init-multiple-postgresql-databases.sh:/docker-entrypoint-initdb.d/00-init-databases.sh
+      - /data/seed/OFF.sql.gz:/docker-entrypoint-initdb.d/01-init-off.sql.gz:ro
+      - postgres_data:/var/lib/postgresql/data
 
   rabbitmq:
     ports: !reset []

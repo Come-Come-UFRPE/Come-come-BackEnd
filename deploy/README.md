@@ -73,12 +73,15 @@ O "1 to change" é o Security Group: as regras mudam no lugar, sem recriar. O pr
 
 ### 5. Enviar o seed do banco do OpenFoodFacts
 
-O `OFF.sql` não está no Git. Envie uma vez para o bucket de artefatos:
+O `OFF.sql` (~4 GB) não está no Git. Comprima e envie uma vez para o bucket de artefatos. A imagem do Postgres importa `.sql.gz` direto:
 
 ```bash
-aws s3 cp OFF-Come-come/src/main/resources/OFF.sql \
-  "s3://$(terraform -chdir=terraform output -raw artifacts_bucket)/seed/OFF.sql"
+gzip -k OFF.sql            # gera OFF.sql.gz e mantém o original
+aws s3 cp OFF.sql.gz \
+  "s3://$(terraform -chdir=terraform output -raw artifacts_bucket)/seed/OFF.sql.gz"
 ```
+
+A importação só acontece na **primeira** subida do Postgres (volume vazio) e pode levar de 10 a 30 minutos. Nesse intervalo, os serviços que dependem do banco reiniciam até ele ficar pronto, e o smoke test do primeiro deploy pode estourar o tempo. Nesse caso, espere a importação terminar e rode o deploy de novo.
 
 ### 6. Conferir se a EC2 está pronta
 

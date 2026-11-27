@@ -18,7 +18,8 @@ INFISICAL_ENV="${INFISICAL_ENV:-prod}"
 # Servidor fixo: sem isso, se o login falhar, o CLI abre um menu interativo
 # ("Select your hosting option") e o deploy trava em vez de falhar.
 export INFISICAL_DOMAIN="${INFISICAL_DOMAIN:-https://app.infisical.com}"
-SEED_FILE=/opt/comecome/data/OFF.sql
+# No volume EBS de dados (/data), que tem espaço; o disco do sistema é pequeno.
+SEED_FILE=/data/seed/OFF.sql.gz
 
 export HOME="${HOME:-/root}"
 cd "$(dirname "$0")/.."
@@ -45,9 +46,9 @@ log "commit $IMAGE_TAG -> https://$APP_DOMAIN"
 # arquivo precisa existir sempre, senão o Docker cria um diretório no lugar.
 if [ ! -s "$SEED_FILE" ]; then
   ARTIFACTS_BUCKET="${PROJECT_NAME}-${ENVIRONMENT}-artifacts-${ACCOUNT_ID}"
-  log "baixando seed s3://$ARTIFACTS_BUCKET/seed/OFF.sql"
+  log "baixando seed s3://$ARTIFACTS_BUCKET/seed/OFF.sql.gz"
   mkdir -p "$(dirname "$SEED_FILE")"
-  aws s3 cp "s3://$ARTIFACTS_BUCKET/seed/OFF.sql" "$SEED_FILE" --region "$REGION" --only-show-errors
+  aws s3 cp "s3://$ARTIFACTS_BUCKET/seed/OFF.sql.gz" "$SEED_FILE" --region "$REGION" --only-show-errors
 fi
 
 # --- Segredos (Infisical via AWS IAM) --------------------------------------
