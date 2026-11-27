@@ -19,6 +19,7 @@ locals {
   s3_buckets = {
     vpc_flow_logs    = "${var.project_name}-${var.environment}-vpc-flow-logs-${data.aws_caller_identity.current.account_id}"
     profile_pictures = "${var.project_name}-${var.environment}-profile-pictures-${data.aws_caller_identity.current.account_id}"
+    artifacts        = "${var.project_name}-${var.environment}-artifacts-${data.aws_caller_identity.current.account_id}"
   }
 }
 
@@ -59,5 +60,10 @@ data "aws_s3_bucket" "vpc_flow_logs" {
 
 data "aws_s3_bucket" "profile_pictures" {
   bucket     = local.s3_buckets.profile_pictures
+  depends_on = [terraform_data.s3_bucket]
+}
+
+data "aws_s3_bucket" "artifacts" {
+  bucket     = local.s3_buckets.artifacts
   depends_on = [terraform_data.s3_bucket]
 }

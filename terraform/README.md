@@ -1,16 +1,20 @@
-# Terraform — Come-come (fundação de rede)
+# Terraform — Come-come
 
-Esta primeira etapa cria somente recursos básicos de rede na AWS:
+Cria a infraestrutura da aplicação na AWS (pensada para o AWS Academy Learner Lab):
 
 - VPC com DNS habilitado;
 - uma sub-rede pública em `us-east-1a`;
 - Internet Gateway;
 - tabela de rotas para saída/entrada via Internet Gateway;
-- Security Group que libera somente a porta configurada do API Gateway na entrada;
+- Security Group que libera na entrada só 80/443 (Caddy, HTTPS); saída para a VPC, HTTPS e SMTP (587);
 - VPC Flow Logs (só tráfego rejeitado) gravados num bucket S3 privado, com retenção de 7 dias;
 - bucket S3 das fotos de perfil (privado, com leitura pública só em `users/*`, criptografado e versionado);
-- a futura EC2 da aplicação grava no bucket pelo `LabInstanceProfile` do Lab, sem Access Keys;
-- VPC Gateway Endpoint do S3 (sem custo), para o tráfego até o bucket não sair pela internet.
+- a EC2 da aplicação grava no bucket pelo `LabInstanceProfile` do Lab, sem Access Keys;
+- VPC Gateway Endpoint do S3 (sem custo), para o tráfego até o bucket não sair pela internet;
+- bucket S3 privado de artefatos (seed do banco do OpenFoodFacts em `seed/OFF.sql`);
+- **EC2 da aplicação** (`compute.tf`): Amazon Linux 2023, `t3.large`, IMDSv2, Docker + Compose + Infisical CLI instalados no primeiro boot, volume EBS de dados separado e Elastic IP.
+
+O deploy da aplicação na EC2 está em [`deploy/README.md`](../deploy/README.md).
 
 **AWS Academy Learner Lab:** o Lab não permite criar roles IAM, por isso nenhum recurso aqui cria IAM. Os flow logs usam destino S3, que dispensa role.
 
@@ -19,7 +23,7 @@ Outras restrições do Lab tratadas aqui:
 - **Buckets S3:** uma SCP do Lab nega `s3:GetBucketObjectLockConfiguration`, que o resource `aws_s3_bucket` sempre lê. Por isso os buckets são criados pelo AWS CLI dentro do Terraform (`buckets.tf`, só se ainda não existirem) e referenciados via `data "aws_s3_bucket"`. É preciso ter o **AWS CLI instalado**. O `terraform destroy` **não apaga os buckets**; remova-os com `aws s3 rb s3://<bucket> --force`.
 - **Descrição de Security Group:** a AWS só aceita ASCII (sem acentos).
 
-Ainda **não** cria EC2, NAT Gateway, ECR ou banco gerenciado. O S3 cobra por armazenamento e requisições (valores baixos para fotos de perfil). VPC, sub-rede, tabela de rotas e Security Group normalmente não têm cobrança horária por si só; o Internet Gateway também não tem tarifa horária, mas tráfego de dados pode ser cobrado. Consulte a tabela de preços AWS antes de evoluir a infraestrutura.
+Não cria NAT Gateway, ECR nem banco gerenciado. A EC2 `t3.large`, os volumes EBS e o Elastic IP consomem créditos do Lab (o Elastic IP também cobra com a instância parada). O S3 cobra por armazenamento e requisições (valores baixos para fotos de perfil). VPC, sub-rede, tabela de rotas e Security Group normalmente não têm cobrança horária por si só; o Internet Gateway também não tem tarifa horária, mas tráfego de dados pode ser cobrado. Consulte a tabela de preços AWS antes de evoluir a infraestrutura.
 
 ## Pré-requisitos locais
 
@@ -56,8 +60,8 @@ terraform destroy
 
 ## Segurança
 
-- Não há regra de entrada SSH (porta 22).
-- A única entrada configurada é a porta do API Gateway (padrão 8083).
-- Para testes, prefira definir `gateway_allowed_cidrs` com seu IP público em formato `/32`, em vez de `0.0.0.0/0`.
-- A regra de saída está ampla nesta etapa para permitir futuras operações da instância; será revisada quando definirmos os fluxos necessários.
-- A sub-rede é pública para simplificar a primeira implantação. Na etapa de compute, vamos avaliar acesso administrativo via AWS Systems Manager e manter bancos, Redis e RabbitMQ sem exposição pública.
+- Não há regra de entrada SSH (porta 22): acesso administrativo e deploy são pelo AWS Systems Manager (SSM).
+- A entrada é só 80/443, atendida pelo Caddy, que faz proxy para o API Gateway com HTTPS. Elas ficam abertas para a internet porque a API é pública e o Let's Encrypt precisa validar o domínio.
+- Bancos, Redis, RabbitMQ, Eureka, Grafana e os microsserviços não publicam portas no host (`docker-compose.prod.yml`).
+- Saída para a internet só em 443 (imagens, Infisical, SSM, Let's Encrypt, API do OpenFoodFacts) e 587 (SMTP). Esses destinos não têm IP fixo.
+- Mudanças de AMI ou do `user_data` são ignoradas para não recriar a instância sem querer. Para aplicar de propósito: `terraform apply -replace=aws_instance.app`.

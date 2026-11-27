@@ -34,36 +34,26 @@ variable "availability_zone" {
   default     = "us-east-1a"
 }
 
-variable "gateway_port" {
-  description = "Porta HTTP publicada pelo API Gateway no Docker Compose."
+variable "instance_type" {
+  description = "Tipo da EC2 da aplicação. O Learner Lab aceita até a família large; a stack inteira (8 JVMs + infra + observabilidade) precisa de ~7 GiB."
+  type        = string
+  default     = "t3.large"
+}
+
+variable "root_volume_size" {
+  description = "Tamanho (GiB) do disco do sistema da EC2."
   type        = number
-  default     = 8083
+  default     = 20
 }
 
-variable "gateway_allowed_cidrs" {
-  description = "Origens autorizadas a acessar o API Gateway. Restrinja para seu IP/CIDR sempre que possível."
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
-}
-
-variable "grafana_port" {
-  description = "Porta HTTP publicada pelo Grafana no Docker Compose."
+variable "data_volume_size" {
+  description = "Tamanho (GiB) do volume EBS de dados (imagens e volumes do Docker: Postgres, RabbitMQ, Prometheus, Loki, Grafana)."
   type        = number
-  default     = 3000
-
-  validation {
-    condition     = var.grafana_port > 0 && var.grafana_port < 65536
-    error_message = "grafana_port deve ser uma porta TCP válida."
-  }
+  default     = 30
 }
 
-variable "grafana_allowed_cidrs" {
-  description = "Origens autorizadas a acessar o Grafana. Lista vazia mantém o Grafana sem acesso externo."
-  type        = list(string)
-  default     = []
-
-  validation {
-    condition     = alltrue([for cidr in var.grafana_allowed_cidrs : can(cidrnetmask(cidr))])
-    error_message = "grafana_allowed_cidrs deve conter apenas blocos CIDR IPv4 válidos, como 203.0.113.10/32."
-  }
+variable "repository_url" {
+  description = "Repositório Git clonado na EC2 (compose, Caddyfile e script de deploy). Precisa ser público."
+  type        = string
+  default     = "https://github.com/Come-Come-UFRPE/Come-come-BackEnd.git"
 }

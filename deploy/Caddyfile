@@ -1,0 +1,23 @@
+# Proxy reverso da API. O Caddy emite e renova sozinho o certificado HTTPS
+# (Let's Encrypt) para APP_DOMAIN, que o deploy.sh calcula a partir do Elastic
+# IP no formato <ip-com-hifens>.sslip.io. HTTP é redirecionado para HTTPS.
+{$APP_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+
+	# Health check público para o smoke test do deploy: só o status agregado
+	# do actuator do gateway (porta de management, que não é publicada).
+	handle /healthz {
+		rewrite * /actuator/health
+		reverse_proxy api-gateway:9000
+	}
+
+	handle {
+		reverse_proxy api-gateway:{$GATEWAY_PORT}
+	}
+}

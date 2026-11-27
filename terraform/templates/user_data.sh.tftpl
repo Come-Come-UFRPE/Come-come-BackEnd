@@ -1,0 +1,73 @@
+#!/bin/bash
+# Bootstrap da EC2 da aplicação (roda uma única vez, no primeiro boot).
+# Log em /var/log/comecome-bootstrap.log
+# Observação: este arquivo é um template do Terraform; $${...} vira ${...} no shell.
+set -euxo pipefail
+exec > >(tee -a /var/log/comecome-bootstrap.log) 2>&1
+
+COMPOSE_VERSION="v5.7.1"
+COMPOSE_SHA256="af426722a8af5de812fcee30cc1c39f0639f5f723cbadefb25e5d4db054064cf"
+INFISICAL_VERSION="0.45.6"
+INFISICAL_SHA256="28dc348089d8f11d68fc6e0a7c58e24c0ac9c9acfac6acbb23dde318d27f4811"
+
+# --- 1. Volume EBS de dados em /data --------------------------------------
+# O anexo do volume pode acontecer alguns segundos depois do boot.
+SERIAL="$(echo "${data_volume_id}" | tr -d '-')"
+DEVICE="/dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_$${SERIAL}"
+for _ in $(seq 1 60); do
+  [ -e "$DEVICE" ] && break
+  sleep 5
+done
+[ -e "$DEVICE" ] || { echo "Volume ${data_volume_id} não foi anexado"; exit 1; }
+
+# Só formata se o volume estiver vazio (nunca apaga dados existentes).
+if ! blkid "$DEVICE" >/dev/null 2>&1; then
+  mkfs.xfs "$DEVICE"
+fi
+mkdir -p /data
+UUID="$(blkid -s UUID -o value "$DEVICE")"
+grep -q "$UUID" /etc/fstab || echo "UUID=$UUID /data xfs defaults,nofail 0 2" >> /etc/fstab
+mount -a
+
+# --- 2. Swap de 2 GiB (folga de memória para as JVMs) ----------------------
+if [ ! -f /swapfile ]; then
+  dd if=/dev/zero of=/swapfile bs=1M count=2048
+  chmod 600 /swapfile
+  mkswap /swapfile
+  echo "/swapfile none swap sw 0 0" >> /etc/fstab
+fi
+swapon -a
+
+# --- 3. Docker (dados no volume EBS, logs com rotação) ---------------------
+dnf install -y docker git
+mkdir -p /etc/docker /data/docker
+cat > /etc/docker/daemon.json <<'EOF'
+{
+  "data-root": "/data/docker",
+  "log-driver": "json-file",
+  "log-opts": { "max-size": "10m", "max-file": "3" }
+}
+EOF
+systemctl enable --now docker
+
+mkdir -p /usr/local/lib/docker/cli-plugins
+curl -fsSL -o /tmp/docker-compose \
+  "https://github.com/docker/compose/releases/download/$${COMPOSE_VERSION}/docker-compose-linux-x86_64"
+echo "$${COMPOSE_SHA256}  /tmp/docker-compose" | sha256sum -c -
+install -m 0755 /tmp/docker-compose /usr/local/lib/docker/cli-plugins/docker-compose
+docker compose version
+
+# --- 4. Infisical CLI -----------------------------------------------------
+curl -fsSL -o /tmp/infisical.rpm \
+  "https://github.com/Infisical/cli/releases/download/v$${INFISICAL_VERSION}/infisical_$${INFISICAL_VERSION}_linux_amd64.rpm"
+echo "$${INFISICAL_SHA256}  /tmp/infisical.rpm" | sha256sum -c -
+dnf install -y /tmp/infisical.rpm
+infisical --version
+
+# --- 5. Código de deploy (compose, Caddyfile, scripts) ---------------------
+mkdir -p /opt/comecome/data
+if [ ! -d /opt/comecome/repo/.git ]; then
+  git clone --depth 1 "${repository_url}" /opt/comecome/repo
+fi
+
+echo "Bootstrap concluído."

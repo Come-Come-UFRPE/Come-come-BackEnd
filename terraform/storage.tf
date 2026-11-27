@@ -119,11 +119,11 @@ resource "aws_s3_bucket_policy" "profile_pictures" {
 
 # ---------------------------------------------------------------------------
 # Acesso da aplicação: o AWS Academy Learner Lab não permite criar roles IAM,
-# então a futura EC2 usa o LabInstanceProfile que o próprio Lab fornece (o
+# então a EC2 (compute.tf) usa o LabInstanceProfile que o próprio Lab fornece (o
 # LabRole já tem acesso ao S3). O AWS SDK do serviço de Cadastro pega essas
 # credenciais automaticamente, sem Access Keys.
-# Ao criar a EC2, defina metadata_options { http_tokens = "required",
-# http_put_response_hop_limit = 2 } para que os containers Docker alcancem o IMDSv2.
+# A EC2 (compute.tf) usa IMDSv2 com hop limit 2 para que os containers Docker
+# alcancem as credenciais da instância.
 # ---------------------------------------------------------------------------
 
 data "aws_iam_instance_profile" "lab" {
@@ -141,4 +141,66 @@ resource "aws_vpc_endpoint" "s3" {
   tags = {
     Name = "${var.project_name}-${var.environment}-s3-endpoint"
   }
+}
+
+# ---------------------------------------------------------------------------
+# Bucket privado de artefatos: arquivos que não vão para o Git mas a EC2
+# precisa, como o seed do banco do OpenFoodFacts (seed/OFF.sql). Nada público.
+# ---------------------------------------------------------------------------
+
+resource "aws_s3_bucket_ownership_controls" "artifacts" {
+  bucket = data.aws_s3_bucket.artifacts.id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "artifacts" {
+  bucket = data.aws_s3_bucket.artifacts.id
+
+  block_public_acls       = true
+  ignore_public_acls      = true
+  block_public_policy     = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "artifacts" {
+  bucket = data.aws_s3_bucket.artifacts.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_versioning" "artifacts" {
+  bucket = data.aws_s3_bucket.artifacts.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_policy" "artifacts" {
+  bucket     = data.aws_s3_bucket.artifacts.id
+  depends_on = [aws_s3_bucket_public_access_block.artifacts]
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "NegaTrafegoSemTLS"
+      Effect    = "Deny"
+      Principal = "*"
+      Action    = "s3:*"
+      Resource = [
+        data.aws_s3_bucket.artifacts.arn,
+        "${data.aws_s3_bucket.artifacts.arn}/*"
+      ]
+      Condition = {
+        Bool = { "aws:SecureTransport" = "false" }
+      }
+    }]
+  })
 }
