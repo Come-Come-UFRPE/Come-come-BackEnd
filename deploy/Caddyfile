@@ -10,6 +10,12 @@
 		-Server
 	}
 
+	# Versão publicada: o SHA do commit que o deploy colocou no ar.
+	handle /version {
+		header Content-Type application/json
+		respond `{"commit":"{$IMAGE_TAG}"}` 200
+	}
+
 	# Health check público para o smoke test do deploy: só o status agregado
 	# do actuator do gateway (porta de management, que não é publicada).
 	handle /healthz {

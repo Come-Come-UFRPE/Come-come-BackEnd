@@ -16,6 +16,15 @@
 x-java: &java
   restart: unless-stopped
   mem_limit: 512m
+  # O HEALTHCHECK das imagens testa a raiz "/" na porta da API (404/401 numa
+  # API REST) e, no gateway, a porta errada. O actuator fica na porta de
+  # management (9000) em todos os serviços.
+  healthcheck:
+    test: ["CMD", "wget", "-q", "-T", "5", "--spider", "http://localhost:9000/actuator/health"]
+    interval: 30s
+    timeout: 10s
+    start_period: 90s
+    retries: 3
 
 services:
   # --- Proxy HTTPS ---------------------------------------------------------
@@ -29,6 +38,9 @@ services:
     environment:
       - 'APP_DOMAIN=${APP_DOMAIN:?APP_DOMAIN não definido (o deploy.sh calcula a partir do Elastic IP)}'
       - 'GATEWAY_PORT=${GATEWAY_PORT}'
+      # Commit publicado, exposto em /version. Muda a cada deploy, o que também
+      # recria o container do Caddy (os certificados ficam no volume caddy_data).
+      - 'IMAGE_TAG=${IMAGE_TAG:?IMAGE_TAG não definido}'
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
