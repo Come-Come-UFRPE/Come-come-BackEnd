@@ -7,7 +7,8 @@ push na main
             1. credenciais da sessão do Lab (secrets AWS_*)
             2. AWS SSM Run Command na EC2: git checkout <sha> + deploy/deploy.sh
                  └─ Infisical (AWS Auth via LabRole) → docker compose pull/up
-            3. smoke test: https://<ip-com-hifens>.sslip.io/healthz
+            3. smoke test: /version == commit publicado e /healthz UP
+               em https://<ip-com-hifens>.sslip.io
 ```
 
 | Arquivo | Papel |
@@ -147,5 +148,7 @@ aws ssm start-session --target "$ID" \
 ```
 
 Depois, abra http://localhost:3000.
+
+**Qual versão está no ar:** `curl https://<ip-com-hifens>.sslip.io/version` responde o SHA do commit publicado.
 
 **Voltar para uma versão anterior:** **Actions → deploy → Run workflow** com o SHA completo de um commit anterior da main.

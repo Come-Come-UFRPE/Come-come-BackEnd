@@ -124,14 +124,19 @@ jobs:
         env:
           DOMAIN: ${{ steps.ec2.outputs.domain }}
         run: |
-          # Na primeira vez o Caddy ainda emite o certificado e as JVMs sobem.
+          # Verifica duas coisas, com tentativas (o Caddy é recriado a cada
+          # deploy e, na primeira vez, as JVMs ainda estão subindo):
+          #   1) /version: o commit no ar é exatamente o que acabamos de publicar;
+          #   2) /healthz: a API (gateway) responde UP.
           for _ in $(seq 1 30); do
-            if curl -fsS --max-time 10 "https://$DOMAIN/healthz"; then
+            COMMIT=$(curl -fsS --max-time 10 "https://$DOMAIN/version" | jq -r .commit 2>/dev/null || true)
+            if [ "$COMMIT" = "$IMAGE_TAG" ] && curl -fsS --max-time 10 "https://$DOMAIN/healthz"; then
               echo
-              echo "API no ar: https://$DOMAIN"
+              echo "Commit ${IMAGE_TAG:0:7} no ar: https://$DOMAIN"
               exit 0
             fi
+            echo "aguardando... /version=${COMMIT:-sem resposta}"
             sleep 20
           done
-          echo "::error::https://$DOMAIN/healthz não respondeu com sucesso em 10 minutos."
+          echo "::error::Em 10 minutos, https://$DOMAIN não passou a servir o commit $IMAGE_TAG com /healthz UP."
           exit 1

@@ -29,6 +29,9 @@ services:
     environment:
       - 'APP_DOMAIN=${APP_DOMAIN:?APP_DOMAIN não definido (o deploy.sh calcula a partir do Elastic IP)}'
       - 'GATEWAY_PORT=${GATEWAY_PORT}'
+      # Commit publicado, exposto em /version. Muda a cada deploy, o que também
+      # recria o container do Caddy (os certificados ficam no volume caddy_data).
+      - 'IMAGE_TAG=${IMAGE_TAG:?IMAGE_TAG não definido}'
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
